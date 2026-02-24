@@ -38,12 +38,12 @@ class ContentItem(SQLModel, table=True):
 def init_db():
     SQLModel.metadata.create_all(engine)
     
-    # Create a default API key if none exists for easy testing
-    with Session(engine) as session:
-        if not session.query(ApiKey).first():
-            default_key = ApiKey(key="default_secret_key", name="Initial Key")
-            session.add(default_key)
-            session.commit()
+    # # Create a default API key if none exists for easy testing
+    # with Session(engine) as session:
+    #     if not session.query(ApiKey).first():
+    #         default_key = ApiKey(key="default_secret_key", name="Initial Key")
+    #         session.add(default_key)
+    #         session.commit()
 
 def get_session():
     with Session(engine) as session:

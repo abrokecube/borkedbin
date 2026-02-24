@@ -109,6 +109,10 @@ async def add_file(file: UploadFile = File(...), session: Session = Depends(get_
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/upload", response_class=HTMLResponse)
+async def upload(request: Request):
+    return templates.TemplateResponse("upload.html", {"request": request})
+
 @app.get("/{item_id}", response_class=HTMLResponse)
 async def get_item(request: Request, item_id: str, session: Session = Depends(get_session)):
     item = session.get(ContentItem, item_id)
