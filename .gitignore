@@ -11,5 +11,5 @@ wheels/
 
 db.sqlite
 uploads/
-# config.yaml
+config.yaml
 *.env
