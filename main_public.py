@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timezone, timedelta
+from typing import Optional
 from fastapi import FastAPI, Depends, Form, File, UploadFile, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -25,35 +27,39 @@ templates = Jinja2Templates(directory="templates")
 MAX_BLOB_SIZE = 100 * 1024  # 100 KB
 
 @app.post("/api/add/text")
-async def add_text(content: str = Form(...), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     item_id = generate_short_id()
-    item = ContentItem(id=item_id, type="text", content_text=content)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
+    item = ContentItem(id=item_id, type="text", content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": f"/{item_id}"}
 
 
 @app.post("/api/add/markdown")
-async def add_markdown(content: str = Form(...), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_markdown(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     item_id = generate_short_id()
-    item = ContentItem(id=item_id, type="markdown", content_text=content)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
+    item = ContentItem(id=item_id, type="markdown", content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": f"/{item_id}"}
 
 
 @app.post("/api/add/url")
-async def add_url(url: str = Form(...), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     item_id = generate_short_id()
-    item = ContentItem(id=item_id, type="url", content_text=url)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
+    item = ContentItem(id=item_id, type="url", content_text=url, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": f"/{item_id}"}
 
 
 @app.post("/api/add/image")
-async def add_image(file: UploadFile = File(...), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     item_id = generate_short_id()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
     
@@ -63,7 +69,7 @@ async def add_image(file: UploadFile = File(...), session: Session = Depends(get
         "size": size
     }
     
-    item = ContentItem(id=item_id, type="image", metadata_json=json.dumps(metadata))
+    item = ContentItem(id=item_id, type="image", metadata_json=json.dumps(metadata), expires_at=expires_at)
     
     if size < MAX_BLOB_SIZE:
         item.content_blob = content
@@ -79,8 +85,9 @@ async def add_image(file: UploadFile = File(...), session: Session = Depends(get
 
 
 @app.post("/api/add/file")
-async def add_file(file: UploadFile = File(...), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     item_id = generate_short_id()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
     
@@ -90,7 +97,7 @@ async def add_file(file: UploadFile = File(...), session: Session = Depends(get_
         "size": size
     }
     
-    item = ContentItem(id=item_id, type="file", metadata_json=json.dumps(metadata))
+    item = ContentItem(id=item_id, type="file", metadata_json=json.dumps(metadata), expires_at=expires_at)
     
     if size < MAX_BLOB_SIZE:
         item.content_blob = content
@@ -119,6 +126,9 @@ async def get_item(request: Request, item_id: str, session: Session = Depends(ge
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    if item.expires_at and datetime.now(timezone.utc) >= item.expires_at:
+        raise HTTPException(status_code=410, detail="Item has expired")
+
     if item.type == "text":
         return templates.TemplateResponse("text.html", {"request": request, "content": item.content_text, "item": item})
     
@@ -143,6 +153,9 @@ async def download_item(item_id: str, session: Session = Depends(get_session)):
     item = session.get(ContentItem, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    if item.expires_at and datetime.now(timezone.utc) >= item.expires_at:
+        raise HTTPException(status_code=410, detail="Item has expired")
 
     if item.type not in ("file", "image"):
         raise HTTPException(status_code=400, detail="Not a downloadable file")

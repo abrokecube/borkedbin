@@ -25,6 +25,7 @@ class ContentItem(SQLModel, table=True):
     file_path: Optional[str] = Field(default=None)      # For files >= 100kb
     metadata_json: str = Field(default="{}")            # Stored as JSON string
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: Optional[datetime] = Field(default=None)
 
     @property
     def metadata_dict(self) -> dict[str, Any]:
