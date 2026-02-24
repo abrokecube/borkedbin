@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Brokebin - Create</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 150px;
+            font-family: monospace;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            background: #007bff;
+            color: white;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        #result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            display: none;
+            word-wrap: break-word;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 2rem;">Brokebin</h1>
+
+        <div class="card" style="background: #e9ecef;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="apiKey">API Key</label>
+                <input type="password" id="apiKey" placeholder="Enter your API Key to create content">
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" data-target="text-form">Text</div>
+                <div class="tab" data-target="markdown-form">Markdown</div>
+                <div class="tab" data-target="url-form">URL</div>
+                <div class="tab" data-target="image-form">Image</div>
+                <div class="tab" data-target="file-form">File</div>
+            </div>
+
+            <!-- Text Form -->
+            <form id="text-form" class="tab-content active" onsubmit="submitForm(event, '/api/add/text')">
+                <div class="form-group">
+                    <label>Plain Text Content</label>
+                    <textarea name="content" required placeholder="Paste your text here..."></textarea>
+                </div>
+                <button type="submit" class="btn">Create Paste</button>
+            </form>
+
+            <!-- Markdown Form -->
+            <form id="markdown-form" class="tab-content" onsubmit="submitForm(event, '/api/add/markdown')">
+                <div class="form-group">
+                    <label>Markdown Content</label>
+                    <textarea name="content" required placeholder="# Title&#10;Paste your markdown here..."></textarea>
+                </div>
+                <button type="submit" class="btn">Create Markdown</button>
+            </form>
+
+            <!-- URL Form -->
+            <form id="url-form" class="tab-content" onsubmit="submitForm(event, '/api/add/url')">
+                <div class="form-group">
+                    <label>URL to Redirect</label>
+                    <input type="text" name="url" required placeholder="https://example.com">
+                </div>
+                <button type="submit" class="btn">Create Shortlink</button>
+            </form>
+
+            <!-- Image Form -->
+            <form id="image-form" class="tab-content" onsubmit="submitForm(event, '/api/add/image')">
+                <div class="form-group">
+                    <label>Upload Image</label>
+                    <input type="file" name="file" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn">Upload Image</button>
+            </form>
+
+            <!-- File Form -->
+            <form id="file-form" class="tab-content" onsubmit="submitForm(event, '/api/add/file')">
+                <div class="form-group">
+                    <label>Upload Generic File</label>
+                    <input type="file" name="file" required>
+                </div>
+                <button type="submit" class="btn">Upload File</button>
+            </form>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Use local storage to persist API key
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('brokebin_api_key');
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+            }
+        });
+
+        document.getElementById('apiKey').addEventListener('change', (e) => {
+            localStorage.setItem('brokebin_api_key', e.target.value);
+        });
+
+        // Tab switching logic
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+                document.getElementById('result').style.display = 'none'; // hide result on switch
+            });
+        });
+
+        async function submitForm(event, endpoint) {
+            event.preventDefault();
+            const form = event.target;
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!apiKey) {
+                showResult('Please enter an API Key', false);
+                return;
+            }
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.innerText = 'Uploading...';
+            submitBtn.disabled = true;
+            document.getElementById('result').style.display = 'none';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const fullUrl = window.location.origin + data.url;
+                    showResult(`Success! Created at: <a href="${data.url}" target="_blank">${fullUrl}</a>`, true);
+                    form.reset();
+                } else {
+                    showResult(`Error: ${data.detail || 'Upload failed'}`, false);
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, false);
+            } finally {
+                submitBtn.innerText = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function showResult(message, isSuccess) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = isSuccess ? 'success' : 'error';
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
