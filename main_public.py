@@ -11,7 +11,13 @@ import json
 
 from database import ContentItem, ApiKey, init_db, get_session
 from dependencies import verify_api_key
-from utils import generate_short_id, ensure_uploads_dir
+from utils import generate_short_id
+from config import settings
+
+def ensure_uploads_dir():
+    """Ensure that the uploads directory exists."""
+    if not os.path.exists(settings.uploads_dir):
+        os.makedirs(settings.uploads_dir)
 
 # Initialize the DB tables if not present
 init_db()
@@ -24,7 +30,7 @@ if not os.path.exists("templates"):
     os.makedirs("templates")
 templates = Jinja2Templates(directory="templates")
 
-MAX_BLOB_SIZE = 100 * 1024  # 100 KB
+MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
 
 @app.post("/api/add/text")
 async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
@@ -74,7 +80,7 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
     if size < MAX_BLOB_SIZE:
         item.content_blob = content
     else:
-        file_path = os.path.join("uploads", f"{item_id}_{file.filename}")
+        file_path = os.path.join(settings.uploads_dir, f"{item_id}_{file.filename}")
         with open(file_path, "wb") as f:
             f.write(content)
         item.file_path = file_path
@@ -102,7 +108,7 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
     if size < MAX_BLOB_SIZE:
         item.content_blob = content
     else:
-        file_path = os.path.join("uploads", f"{item_id}_{file.filename}")
+        file_path = os.path.join(settings.uploads_dir, f"{item_id}_{file.filename}")
         with open(file_path, "wb") as f:
             f.write(content)
         item.file_path = file_path

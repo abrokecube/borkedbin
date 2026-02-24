@@ -5,18 +5,19 @@ import os
 from datetime import datetime, timezone
 from sqlmodel import Session, select
 from database import engine, ContentItem
+from config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("brokebin.runner")
 
 async def run_public():
-    config = uvicorn.Config("main_public:app", host="0.0.0.0", port=8000)
+    config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port)
     server = uvicorn.Server(config)
     await server.serve()
 
 async def run_admin():
-    config = uvicorn.Config("main_admin:app", host="127.0.0.1", port=8001)
+    config = uvicorn.Config("main_admin:app", host=settings.admin_host, port=settings.admin_port)
     server = uvicorn.Server(config)
     await server.serve()
 
@@ -42,8 +43,8 @@ async def prune_expired_items():
         except Exception as e:
             logger.error(f"Error while pruning expired items: {e}")
         
-        # Wait 60 seconds before checking again
-        await asyncio.sleep(60)
+        # Wait specified seconds before checking again
+        await asyncio.sleep(settings.prune_interval_seconds)
 
 async def main():
     logger.info("Starting Brokebin Servers and Background Tasks...")

@@ -3,9 +3,10 @@ import json
 from datetime import datetime, timezone
 from typing import Optional, Any
 from sqlmodel import SQLModel, Field, Session, create_engine
+from config import settings
 
 # Path to the sqlite database
-DATABASE_URL = "sqlite:///./db.sqlite"
+DATABASE_URL = settings.database_url
 
 # Ensure the database engine uses connect_args for sqlite to allow multi-threading in fastapi
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
