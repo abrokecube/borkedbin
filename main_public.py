@@ -19,6 +19,11 @@ def ensure_uploads_dir():
     if not os.path.exists(settings.uploads_dir):
         os.makedirs(settings.uploads_dir)
 
+def get_full_url(item_id: str) -> str:
+    if settings.public_base_url:
+        return f"{settings.public_base_url.rstrip('/')}/{item_id}"
+    return f"/{item_id}"
+
 # Initialize the DB tables if not present
 init_db()
 ensure_uploads_dir()
@@ -39,7 +44,7 @@ async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(No
     item = ContentItem(id=item_id, type="text", content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
-    return {"id": item_id, "url": f"/{item_id}"}
+    return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/markdown")
@@ -49,7 +54,7 @@ async def add_markdown(content: str = Form(...), expires_in: Optional[int] = For
     item = ContentItem(id=item_id, type="markdown", content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
-    return {"id": item_id, "url": f"/{item_id}"}
+    return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/url")
@@ -59,7 +64,7 @@ async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), 
     item = ContentItem(id=item_id, type="url", content_text=url, expires_at=expires_at)
     session.add(item)
     session.commit()
-    return {"id": item_id, "url": f"/{item_id}"}
+    return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/image")
@@ -87,7 +92,7 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
 
     session.add(item)
     session.commit()
-    return {"id": item_id, "url": f"/{item_id}"}
+    return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/file")
@@ -115,7 +120,7 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
 
     session.add(item)
     session.commit()
-    return {"id": item_id, "url": f"/{item_id}"}
+    return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.get("/", response_class=HTMLResponse)

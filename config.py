@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     # Public server and admin server ports
     public_host: str = Field(default="0.0.0.0", description="Host to bind the public server to")
     public_port: int = Field(default=8000, description="Port for the public server")
+    public_base_url: str = Field(default="", description="Base URL for generated public links (e.g. https://brokebin.com)")
     admin_host: str = Field(default="127.0.0.1", description="Host to bind the admin server to")
     admin_port: int = Field(default=8001, description="Port for the admin server")
     

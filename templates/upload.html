@@ -259,7 +259,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    const fullUrl = window.location.origin + data.url;
+                    const fullUrl = data.url.startsWith('http') ? data.url : window.location.origin + data.url;
                     showResult(`Success! Created at: <a href="${data.url}" target="_blank">${fullUrl}</a>`, true);
                     form.reset();
                 } else {
