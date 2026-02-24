@@ -6,3 +6,4 @@ database_url: "sqlite:///./db.sqlite"
 uploads_dir: "uploads"
 max_blob_size_kb: 100
 prune_interval_seconds: 60
+public_base_url: "https://bin.borkedcube.moe"
