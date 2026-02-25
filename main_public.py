@@ -96,37 +96,6 @@ async def add_url(url: str = Form(...), title: Optional[str] = Form(None), expir
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
-@app.post("/api/add/image")
-async def add_image(file: UploadFile = File(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    content = await file.read()
-    size = len(content)
-    if size > MAX_FILE_SIZE:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"File exceeds the maximum allowed size of {settings.max_file_size_mb}MB")
-        
-    item_id = generate_short_id(settings.id_length)
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
-    
-    metadata = {
-        "filename": file.filename,
-        "content_type": file.content_type,
-        "size": size
-    }
-    
-    item = ContentItem(id=item_id, type="image", title=title or None, metadata_json=json.dumps(metadata), expires_at=expires_at)
-    
-    if size < MAX_BLOB_SIZE:
-        item.content_blob = content
-    else:
-        file_path = os.path.join(settings.uploads_dir, f"{item_id}_{file.filename}")
-        with open(file_path, "wb") as f:
-            f.write(content)
-        item.file_path = file_path
-
-    session.add(item)
-    session.commit()
-    return {"id": item_id, "url": get_full_url(item_id)}
-
-
 @app.post("/api/add/file")
 async def add_file(file: UploadFile = File(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     content = await file.read()
@@ -154,6 +123,10 @@ async def add_file(file: UploadFile = File(...), title: Optional[str] = Form(Non
     
     if magic_mime.startswith("image/"):
         item_type = "image"
+    elif magic_mime.startswith("audio/"):
+        item_type = "audio"
+    elif magic_mime.startswith("video/"):
+        item_type = "video"
     elif magic_mime in ("text/markdown", "text/x-markdown"):
         try:
             content_text = content.decode("utf-8")
@@ -221,6 +194,14 @@ async def get_item(request: Request, item_id: str, session: Session = Depends(ge
         
     elif item.type == "image":
         return templates.TemplateResponse("image.html", {"request": request, "item": item}, headers=cache_headers)
+    
+    elif item.type == "audio":
+        metadata = item.metadata_dict
+        return templates.TemplateResponse("audio.html", {"request": request, "item": item, "metadata": metadata}, headers=cache_headers)
+    
+    elif item.type == "video":
+        metadata = item.metadata_dict
+        return templates.TemplateResponse("video.html", {"request": request, "item": item, "metadata": metadata}, headers=cache_headers)
         
     elif item.type == "file":
         metadata = item.metadata_dict
@@ -247,7 +228,7 @@ async def get_raw_item(item_id: str, session: Session = Depends(get_session)):
     elif item.type == "url":
         return Response(content=item.content_text, media_type="text/plain", headers=cache_headers)
         
-    elif item.type in ("file", "image"):
+    elif item.type in ("file", "image", "audio", "video"):
         metadata = item.metadata_dict
         content_type = metadata.get("content_type", "application/octet-stream")
         if item.content_blob is not None:

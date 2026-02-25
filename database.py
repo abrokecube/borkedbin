@@ -20,7 +20,7 @@ class ApiKey(SQLModel, table=True):
 
 class ContentItem(SQLModel, table=True):
     id: str = Field(primary_key=True)  # Short alphanumeric ID
-    type: str = Field(index=True)      # 'text', 'markdown', 'image', 'url', 'file'
+    type: str = Field(index=True)      # 'text', 'markdown', 'image', 'audio', 'video', 'url', 'file'
     title: Optional[str] = Field(default=None)  # Optional display title
     content_text: Optional[str] = Field(default=None) # For text, markdown, url
     content_blob: Optional[bytes] = Field(default=None) # For files < 100kb

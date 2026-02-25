@@ -151,7 +151,6 @@
                 <div class="tab active" data-target="text-form">Text</div>
                 <div class="tab" data-target="markdown-form">Markdown</div>
                 <div class="tab" data-target="url-form">URL</div>
-                <div class="tab" data-target="image-form">Image</div>
                 <div class="tab" data-target="file-form">File</div>
             </div>
 
@@ -182,16 +181,6 @@
                     <input type="text" name="url" required placeholder="https://example.com">
                 </div>
                 <button type="submit" class="btn">Create Shortlink</button>
-            </form>
-
-            <!-- Image Form -->
-            <form id="image-form" class="tab-content" onsubmit="submitForm(event, '/api/add/image')">
-                <div class="form-group">
-                    <label>Upload Image</label>
-                    <p>Max size: {{ max_file_size_mb }} MB</p>
-                    <input type="file" name="file" accept="image/*" required>
-                </div>
-                <button type="submit" class="btn">Upload Image</button>
             </form>
 
             <!-- File Form -->
