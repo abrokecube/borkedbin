@@ -106,9 +106,22 @@
         <div class="card">
             <h2>API Keys</h2>
             <form action="/keys/create" method="POST" style="margin-bottom: 1rem;">
-                <input type="text" name="name" placeholder="New Key Name" required
-                    style="padding: 0.4rem; width: 200px;">
-                <button type="submit" class="btn btn-primary">Create Key</button>
+                <div style="margin-bottom: 0.5rem;">
+                    <input type="text" name="name" placeholder="New Key Name" required
+                        style="padding: 0.4rem; width: 200px;">
+                    <button type="submit" class="btn btn-primary">Create Key</button>
+                </div>
+                <div style="font-size: 0.9rem; color: #555;">
+                    <label style="margin-right: 1rem;"><input type="checkbox" name="allow_all" value="true" checked>
+                        Allow All</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="text"> Text</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="markdown"> Markdown</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="url"> URL</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="image"> Image</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="audio"> Audio</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="video"> Video</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="file"> File</label>
+                </div>
             </form>
 
             <table>
@@ -117,6 +130,7 @@
                     <th>Name</th>
                     <th>Key</th>
                     <th>Status</th>
+                    <th>Allowed Types</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -130,8 +144,10 @@
                             {{ 'Active' if key.is_active else 'Inactive' }}
                         </span>
                     </td>
+                    <td><code>{{ key.allowed_types }}</code></td>
                     <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
+                        <a href="/keys/{{ key.id }}/edit" class="btn btn-primary" style="margin-right: 4px;">Edit</a>
                         <form action="/keys/{{ key.id }}/toggle" method="POST" style="display:inline;">
                             <button type="submit" class="btn btn-secondary">Toggle</button>
                         </form>

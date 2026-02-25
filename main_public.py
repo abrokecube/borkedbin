@@ -12,7 +12,7 @@ import json
 import magic
 
 from database import ContentItem, ApiKey, init_db, get_session
-from dependencies import verify_api_key
+from dependencies import verify_api_key, check_upload_permission
 from utils import generate_short_id
 from config import settings
 
@@ -62,6 +62,7 @@ MAX_TEXT_SIZE = settings.max_text_size_mb * 1024 * 1024
 
 @app.post("/api/add/text")
 async def add_text(content: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    check_upload_permission(api_key, "text")
     if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
@@ -74,6 +75,7 @@ async def add_text(content: str = Form(...), title: Optional[str] = Form(None), 
 
 @app.post("/api/add/markdown")
 async def add_markdown(content: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    check_upload_permission(api_key, "markdown")
     if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
@@ -86,6 +88,7 @@ async def add_markdown(content: str = Form(...), title: Optional[str] = Form(Non
 
 @app.post("/api/add/url")
 async def add_url(url: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    check_upload_permission(api_key, "url")
     if len(url.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"URL exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
@@ -139,6 +142,8 @@ async def add_file(file: UploadFile = File(...), title: Optional[str] = Form(Non
             item_type = "text"
         except UnicodeDecodeError:
             pass
+
+    check_upload_permission(api_key, item_type)
 
     item = ContentItem(id=item_id, type=item_type, title=title or None, metadata_json=json.dumps(metadata), expires_at=expires_at)
     

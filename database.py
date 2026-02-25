@@ -17,6 +17,7 @@ class ApiKey(SQLModel, table=True):
     name: str = Field(default="Default Key")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = Field(default=True)
+    allowed_types: str = Field(default="*") # Comma-separated list or '*' for all
 
 class ContentItem(SQLModel, table=True):
     id: str = Field(primary_key=True)  # Short alphanumeric ID

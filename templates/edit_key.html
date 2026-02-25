@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Borkedbin - Edit API Key</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: normal;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Edit API Key</h1>
+
+        <div class="card">
+            <form action="/keys/{{ key.id }}/edit" method="POST">
+                <div class="form-group">
+                    <label>Key Name</label>
+                    <input type="text" name="name" value="{{ key.name }}" required>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Allowed Types</label>
+                    <label><input type="checkbox" name="allow_all" value="true" {% if key.allowed_types=='*' %}checked{%
+                            endif %}> Allow All</label><br>
+
+                    {% set allowed_list = key.allowed_types.split(',') if key.allowed_types != '*' else [] %}
+
+                    <label><input type="checkbox" name="allowed_types_list" value="text" {% if key.allowed_types=='*'
+                            or 'text' in allowed_list %}checked{% endif %}> Text</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="markdown" {% if
+                            key.allowed_types=='*' or 'markdown' in allowed_list %}checked{% endif %}> Markdown</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="url" {% if key.allowed_types=='*'
+                            or 'url' in allowed_list %}checked{% endif %}> URL</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="image" {% if key.allowed_types=='*'
+                            or 'image' in allowed_list %}checked{% endif %}> Image</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="audio" {% if key.allowed_types=='*'
+                            or 'audio' in allowed_list %}checked{% endif %}> Audio</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="video" {% if key.allowed_types=='*'
+                            or 'video' in allowed_list %}checked{% endif %}> Video</label>
+                    <label><input type="checkbox" name="allowed_types_list" value="file" {% if key.allowed_types=='*'
+                            or 'file' in allowed_list %}checked{% endif %}> File</label>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="/" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

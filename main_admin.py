@@ -56,9 +56,45 @@ async def delete_item(item_id: str, session: Session = Depends(get_session)):
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/keys/create")
-async def create_key(name: str = Form(...), session: Session = Depends(get_session)):
+async def create_key(
+    name: str = Form(...), 
+    allow_all: bool = Form(False),
+    allowed_types_list: List[str] = Form(default=[]),
+    session: Session = Depends(get_session)
+):
     new_key = generate_short_id(32) # longer for API keys
-    key_record = ApiKey(key=new_key, name=name)
+    allowed_types_str = "*" if allow_all else ",".join(allowed_types_list)
+    key_record = ApiKey(key=new_key, name=name, allowed_types=allowed_types_str)
+    session.add(key_record)
+    session.commit()
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get("/keys/{key_id}/edit", response_class=HTMLResponse)
+async def edit_key_page(request: Request, key_id: int, session: Session = Depends(get_session)):
+    key_record = session.get(ApiKey, key_id)
+    if not key_record:
+        raise HTTPException(status_code=404, detail="Key not found")
+        
+    return templates.TemplateResponse("edit_key.html", {
+        "request": request,
+        "key": key_record
+    })
+
+@app.post("/keys/{key_id}/edit")
+async def edit_key_post(
+    key_id: int,
+    name: str = Form(...), 
+    allow_all: bool = Form(False),
+    allowed_types_list: List[str] = Form(default=[]),
+    session: Session = Depends(get_session)
+):
+    key_record = session.get(ApiKey, key_id)
+    if not key_record:
+        raise HTTPException(status_code=404, detail="Key not found")
+        
+    key_record.name = name
+    key_record.allowed_types = "*" if allow_all else ",".join(allowed_types_list)
+    
     session.add(key_record)
     session.commit()
     return RedirectResponse(url="/", status_code=303)
