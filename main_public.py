@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 import markdown
 import json
+import magic
 
 from database import ContentItem, ApiKey, init_db, get_session
 from dependencies import verify_api_key
@@ -136,27 +137,30 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     
+    # Detect file type using python-magic
+    magic_mime = magic.from_buffer(content, mime=True)
+    magic_description = magic.from_buffer(content)
+    
     metadata = {
         "filename": file.filename,
         "content_type": file.content_type,
-        "size": size
+        "size": size,
+        "magic_mime": magic_mime,
+        "magic_description": magic_description
     }
     
     item_type = "file"
     content_text = None
     
-    content_type = file.content_type.lower() if file.content_type else ""
-    filename = file.filename.lower() if file.filename else ""
-    
-    if content_type.startswith("image/") or filename.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico")):
+    if magic_mime.startswith("image/"):
         item_type = "image"
-    elif content_type in ("text/markdown", "text/x-markdown") or filename.endswith((".md", ".markdown")):
+    elif magic_mime in ("text/markdown", "text/x-markdown"):
         try:
             content_text = content.decode("utf-8")
             item_type = "markdown"
         except UnicodeDecodeError:
             pass
-    elif content_type.startswith("text/") or filename.endswith((".txt", ".json", ".csv", ".log", ".py", ".js", ".html", ".css", ".xml")):
+    elif magic_mime.startswith("text/") or magic_mime in ("application/json", "application/xml"):
         try:
             content_text = content.decode("utf-8")
             item_type = "text"
@@ -186,7 +190,11 @@ async def index(request: Request):
 
 @app.get("/upload", response_class=HTMLResponse, include_in_schema=False)
 async def upload(request: Request):
-    return templates.TemplateResponse("upload.html", {"request": request})
+    return templates.TemplateResponse("upload.html", {
+        "request": request,
+        "max_file_size_mb": settings.max_file_size_mb,
+        "max_text_size_mb": settings.max_text_size_mb
+    })
 
 @app.get("/{item_id}", response_class=HTMLResponse, include_in_schema=False)
 async def get_item(request: Request, item_id: str, session: Session = Depends(get_session)):

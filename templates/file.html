@@ -56,7 +56,13 @@
         <h1>File Download</h1>
         <p>
             <strong>Filename:</strong> {{ metadata.get("filename", item.id) }}<br>
-            <strong>Size:</strong> {{ '{:.2f}'.format(metadata.get("size", 0) / 1024) }} KB
+            <strong>Size:</strong> {{ '{:.2f}'.format(metadata.get("size", 0) / 1024) }} KB<br>
+            {% if metadata.get("magic_mime") %}
+            <strong>Type:</strong> {{ metadata.get("magic_mime") }}<br>
+            {% endif %}
+            {% if metadata.get("magic_description") %}
+            <strong>Description:</strong> {{ metadata.get("magic_description") }}<br>
+            {% endif %}
         </p>
         <a href="/download/{{ item.id }}" class="btn">Download File</a>
     </div>

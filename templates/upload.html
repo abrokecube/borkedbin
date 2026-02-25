@@ -155,6 +155,7 @@
             <form id="text-form" class="tab-content active" onsubmit="submitForm(event, '/api/add/text')">
                 <div class="form-group">
                     <label>Plain Text Content</label>
+                    <p>Max size: {{ max_text_size_mb }} MB</p>
                     <textarea name="content" required placeholder="Paste your text here..."></textarea>
                 </div>
                 <button type="submit" class="btn">Create Paste</button>
@@ -164,6 +165,7 @@
             <form id="markdown-form" class="tab-content" onsubmit="submitForm(event, '/api/add/markdown')">
                 <div class="form-group">
                     <label>Markdown Content</label>
+                    <p>Max size: {{ max_text_size_mb }} MB</p>
                     <textarea name="content" required placeholder="# Title&#10;Paste your markdown here..."></textarea>
                 </div>
                 <button type="submit" class="btn">Create Markdown</button>
@@ -182,6 +184,7 @@
             <form id="image-form" class="tab-content" onsubmit="submitForm(event, '/api/add/image')">
                 <div class="form-group">
                     <label>Upload Image</label>
+                    <p>Max size: {{ max_file_size_mb }} MB</p>
                     <input type="file" name="file" accept="image/*" required>
                 </div>
                 <button type="submit" class="btn">Upload Image</button>
@@ -191,6 +194,7 @@
             <form id="file-form" class="tab-content" onsubmit="submitForm(event, '/api/add/file')">
                 <div class="form-group">
                     <label>Upload Generic File</label>
+                    <p>Max size: {{ max_file_size_mb }} MB</p>
                     <input type="file" name="file" required>
                 </div>
                 <button type="submit" class="btn">Upload File</button>
@@ -201,6 +205,11 @@
     </div>
 
     <script>
+        const MAX_FILE_SIZE = parseInt("{{ max_file_size_mb }}") * 1024 * 1024;
+        const MAX_TEXT_SIZE = parseInt("{{ max_text_size_mb }}") * 1024 * 1024;
+        const MAX_FILE_SIZE_MB = parseInt("{{ max_file_size_mb }}");
+        const MAX_TEXT_SIZE_MB = parseInt("{{ max_text_size_mb }}");
+
         // Use local storage to persist API key
         document.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('brokebin_api_key');
@@ -233,6 +242,26 @@
             if (!apiKey) {
                 showResult('Please enter an API Key', false);
                 return;
+            }
+
+            // Client-side size validation
+            const fileInput = form.querySelector('input[type="file"]');
+            const textInput = form.querySelector('textarea') || form.querySelector('input[name="url"]');
+
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > MAX_FILE_SIZE) {
+                    showResult(`File is too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is ${MAX_FILE_SIZE_MB} MB.`, false);
+                    return;
+                }
+            }
+
+            if (textInput) {
+                const textSize = new Blob([textInput.value]).size;
+                if (textSize > MAX_TEXT_SIZE) {
+                    showResult(`Content is too large (${(textSize / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is ${MAX_TEXT_SIZE_MB} MB.`, false);
+                    return;
+                }
             }
 
             const submitBtn = form.querySelector('button[type="submit"]');
