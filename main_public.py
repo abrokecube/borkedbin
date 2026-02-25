@@ -56,9 +56,13 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
     return Response(content="404 Not Found", media_type="text/plain", status_code=404)
 
 MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
+MAX_FILE_SIZE = settings.max_file_size_mb * 1024 * 1024
+MAX_TEXT_SIZE = settings.max_text_size_mb * 1024 * 1024
 
 @app.post("/api/add/text")
 async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="text", content_text=content, expires_at=expires_at)
@@ -69,6 +73,8 @@ async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(No
 
 @app.post("/api/add/markdown")
 async def add_markdown(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="markdown", content_text=content, expires_at=expires_at)
@@ -79,6 +85,8 @@ async def add_markdown(content: str = Form(...), expires_in: Optional[int] = For
 
 @app.post("/api/add/url")
 async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+    if len(url.encode('utf-8')) > MAX_TEXT_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"URL exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="url", content_text=url, expires_at=expires_at)
@@ -89,10 +97,13 @@ async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), 
 
 @app.post("/api/add/image")
 async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id(settings.id_length)
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"File exceeds the maximum allowed size of {settings.max_file_size_mb}MB")
+        
+    item_id = generate_short_id(settings.id_length)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     
     metadata = {
         "filename": file.filename,
@@ -117,10 +128,13 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
 
 @app.post("/api/add/file")
 async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id(settings.id_length)
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"File exceeds the maximum allowed size of {settings.max_file_size_mb}MB")
+        
+    item_id = generate_short_id(settings.id_length)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     
     metadata = {
         "filename": file.filename,
@@ -128,9 +142,32 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
         "size": size
     }
     
-    item = ContentItem(id=item_id, type="file", metadata_json=json.dumps(metadata), expires_at=expires_at)
+    item_type = "file"
+    content_text = None
     
-    if size < MAX_BLOB_SIZE:
+    content_type = file.content_type.lower() if file.content_type else ""
+    filename = file.filename.lower() if file.filename else ""
+    
+    if content_type.startswith("image/") or filename.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico")):
+        item_type = "image"
+    elif content_type in ("text/markdown", "text/x-markdown") or filename.endswith((".md", ".markdown")):
+        try:
+            content_text = content.decode("utf-8")
+            item_type = "markdown"
+        except UnicodeDecodeError:
+            pass
+    elif content_type.startswith("text/") or filename.endswith((".txt", ".json", ".csv", ".log", ".py", ".js", ".html", ".css", ".xml")):
+        try:
+            content_text = content.decode("utf-8")
+            item_type = "text"
+        except UnicodeDecodeError:
+            pass
+
+    item = ContentItem(id=item_id, type=item_type, metadata_json=json.dumps(metadata), expires_at=expires_at)
+    
+    if item_type in ("text", "markdown"):
+        item.content_text = content_text
+    elif size < MAX_BLOB_SIZE:
         item.content_blob = content
     else:
         file_path = os.path.join(settings.uploads_dir, f"{item_id}_{file.filename}")

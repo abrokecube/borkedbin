@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite:///./db.sqlite", description="SQLAlchemy connection URI for SQLite")
     uploads_dir: str = Field(default="uploads", description="Directory to store uploaded large files")
     max_blob_size_kb: int = Field(default=100, description="Max size in KB for storing files directly in the DB")
+    max_file_size_mb: int = Field(default=50, description="Max size in MB for file/image uploads")
+    max_text_size_mb: int = Field(default=10, description="Max size in MB for text/markdown uploads")
     
     # Pruning task
     prune_interval_seconds: int = Field(default=60, description="How often the expired item pruning loop runs (seconds)")
