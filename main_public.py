@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, Depends, Form, File, UploadFile, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 import markdown
@@ -47,6 +48,12 @@ app = FastAPI(title="Brokebin - Public")
 if not os.path.exists("templates"):
     os.makedirs("templates")
 templates = Jinja2Templates(directory="templates")
+
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc: StarletteHTTPException):
+    if request.url.path.count("/") == 1:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return Response(content="404 Not Found", media_type="text/plain", status_code=404)
 
 MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
 
@@ -175,6 +182,37 @@ async def get_item(request: Request, item_id: str, session: Session = Depends(ge
         return templates.TemplateResponse("file.html", {"request": request, "item": item, "metadata": metadata}, headers=cache_headers)
 
     return Response(status_code=500, content="Unknown type")
+
+@app.get("/raw/{item_id}")
+async def get_raw_item(item_id: str, session: Session = Depends(get_session)):
+    item = session.get(ContentItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    if item.expires_at:
+        expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
+        if datetime.now(timezone.utc) >= expires_at:
+            raise HTTPException(status_code=410, detail="Item has expired")
+
+    cache_headers = get_cache_headers(item)
+
+    if item.type in ("text", "markdown"):
+        return Response(content=item.content_text, media_type="text/plain", headers=cache_headers)
+    
+    elif item.type == "url":
+        return Response(content=item.content_text, media_type="text/plain", headers=cache_headers)
+        
+    elif item.type == "image":
+        metadata = item.metadata_dict
+        content_type = metadata.get("content_type", "image/png")
+        if item.content_blob is not None:
+            return Response(content=item.content_blob, media_type=content_type, headers=cache_headers)
+        elif item.file_path and os.path.exists(item.file_path):
+            return FileResponse(item.file_path, media_type=content_type, headers=cache_headers)
+        else:
+            raise HTTPException(status_code=404, detail="Image data not found")
+
+    raise HTTPException(status_code=400, detail="Raw content not supported for this type")
 
 @app.get("/download/{item_id}")
 async def download_item(item_id: str, session: Session = Depends(get_session)):

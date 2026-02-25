@@ -135,6 +135,10 @@
                         <form action="/keys/{{ key.id }}/toggle" method="POST" style="display:inline;">
                             <button type="submit" class="btn btn-secondary">Toggle</button>
                         </form>
+                        <form action="/keys/{{ key.id }}/delete" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Delete this API key permanently?');">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -148,6 +152,7 @@
                     <th>ID</th>
                     <th>Type</th>
                     <th>Created At</th>
+                    <th>Expires At</th>
                     <th>File Details</th>
                     <th>Actions</th>
                 </tr>
@@ -156,6 +161,7 @@
                     <td><code>{{ item.id }}</code></td>
                     <td>{{ item.type }}</td>
                     <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ item.expires_at.strftime('%Y-%m-%d %H:%M') if item.expires_at else 'Never' }}</td>
                     <td>
                         {% filter truncate(30) %}
                         {% if item.type in ('file', 'image') %}
