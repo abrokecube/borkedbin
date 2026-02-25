@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     minimum_cache_ttl_seconds: int = Field(default=7200, description="Minimum time to expiry before caching is allowed (seconds). E.g. Cloudflare free tier min TTL is 2 hours (7200s).")
     maximum_cache_ttl_seconds: int = Field(default=86400, description="Maximum cache duration allowed (seconds). Default 24 hours.")
 
+    # ID generation
+    id_length: int = Field(default=8, description="Length of generated IDs")
+
     # The magic sauce to allow nested env vars or dotenv files
     model_config = SettingsConfigDict(
         env_file=".env", 

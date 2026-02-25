@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="templates")
 async def custom_404_handler(request: Request, exc: StarletteHTTPException):
     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def admin_dashboard(request: Request, session: Session = Depends(get_session)):
     items = session.exec(select(ContentItem).order_by(ContentItem.created_at.desc())).all()
     keys = session.exec(select(ApiKey).order_by(ApiKey.created_at.desc())).all()

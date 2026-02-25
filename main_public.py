@@ -59,7 +59,7 @@ MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
 
 @app.post("/api/add/text")
 async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id()
+    item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="text", content_text=content, expires_at=expires_at)
     session.add(item)
@@ -69,7 +69,7 @@ async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(No
 
 @app.post("/api/add/markdown")
 async def add_markdown(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id()
+    item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="markdown", content_text=content, expires_at=expires_at)
     session.add(item)
@@ -79,7 +79,7 @@ async def add_markdown(content: str = Form(...), expires_in: Optional[int] = For
 
 @app.post("/api/add/url")
 async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id()
+    item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     item = ContentItem(id=item_id, type="url", content_text=url, expires_at=expires_at)
     session.add(item)
@@ -89,7 +89,7 @@ async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), 
 
 @app.post("/api/add/image")
 async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id()
+    item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
@@ -117,7 +117,7 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
 
 @app.post("/api/add/file")
 async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
-    item_id = generate_short_id()
+    item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
     content = await file.read()
     size = len(content)
@@ -143,15 +143,15 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/upload", response_class=HTMLResponse)
+@app.get("/upload", response_class=HTMLResponse, include_in_schema=False)
 async def upload(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
-@app.get("/{item_id}", response_class=HTMLResponse)
+@app.get("/{item_id}", response_class=HTMLResponse, include_in_schema=False)
 async def get_item(request: Request, item_id: str, session: Session = Depends(get_session)):
     item = session.get(ContentItem, item_id)
     if not item:
@@ -202,43 +202,16 @@ async def get_raw_item(item_id: str, session: Session = Depends(get_session)):
     elif item.type == "url":
         return Response(content=item.content_text, media_type="text/plain", headers=cache_headers)
         
-    elif item.type == "image":
+    elif item.type in ("file", "image"):
         metadata = item.metadata_dict
-        content_type = metadata.get("content_type", "image/png")
+        content_type = metadata.get("content_type", "application/octet-stream")
         if item.content_blob is not None:
-            return Response(content=item.content_blob, media_type=content_type, headers=cache_headers)
+            headers = {'Content-Disposition': f'attachment; filename="{filename}"'}
+            headers.update(cache_headers)
+            return Response(content=item.content_blob, media_type=content_type, headers=headers)
         elif item.file_path and os.path.exists(item.file_path):
             return FileResponse(item.file_path, media_type=content_type, headers=cache_headers)
         else:
-            raise HTTPException(status_code=404, detail="Image data not found")
+            raise HTTPException(status_code=404, detail="File data not found")
 
     raise HTTPException(status_code=400, detail="Raw content not supported for this type")
-
-@app.get("/download/{item_id}")
-async def download_item(item_id: str, session: Session = Depends(get_session)):
-    item = session.get(ContentItem, item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    if item.expires_at:
-        expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
-        if datetime.now(timezone.utc) >= expires_at:
-            raise HTTPException(status_code=410, detail="Item has expired")
-
-    if item.type not in ("file", "image"):
-        raise HTTPException(status_code=400, detail="Not a downloadable file")
-
-    metadata = item.metadata_dict
-    filename = metadata.get("filename", item_id)
-    content_type = metadata.get("content_type", "application/octet-stream")
-
-    cache_headers = get_cache_headers(item)
-
-    if item.content_blob is not None:
-        headers = {'Content-Disposition': f'attachment; filename="{filename}"'}
-        headers.update(cache_headers)
-        return Response(content=item.content_blob, media_type=content_type, headers=headers)
-    elif item.file_path and os.path.exists(item.file_path):
-        return FileResponse(item.file_path, filename=filename, media_type=content_type, headers=cache_headers)
-    else:
-        raise HTTPException(status_code=404, detail="File data not found")
