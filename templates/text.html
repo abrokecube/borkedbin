@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Brokebin - Text</title>
+    <title>{{ item.title if item.title else "Brokebin - Text" }}</title>
     <style>
-        body { font-family: monospace; background: #1a1a1a; color: #eee; padding: 2rem; }
-        pre { white-space: pre-wrap; word-wrap: break-word; }
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #eee;
+            padding: 2rem;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
+
 <body>
     <pre>{{ content }}</pre>
 </body>
+
 </html>

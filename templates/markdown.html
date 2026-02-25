@@ -1,15 +1,42 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Brokebin - Markdown</title>
+    <title>{{ item.title if item.title else "Brokebin - Markdown" }}</title>
     <style>
-        body { font-family: sans-serif; background: #fdfdfd; color: #333; padding: 2rem; max-width: 800px; margin: auto; line-height: 1.6;}
-        pre { background: #f4f4f4; padding: 1rem; border-radius: 4px; overflow-x: auto; }
-        code { background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
-        img { max-width: 100%; height: auto; }
+        body {
+            font-family: sans-serif;
+            background: #fdfdfd;
+            color: #333;
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+            line-height: 1.6;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
+
 <body>
     {{ html_content | safe }}
 </body>
+
 </html>

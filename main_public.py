@@ -61,43 +61,43 @@ MAX_FILE_SIZE = settings.max_file_size_mb * 1024 * 1024
 MAX_TEXT_SIZE = settings.max_text_size_mb * 1024 * 1024
 
 @app.post("/api/add/text")
-async def add_text(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_text(content: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
-    item = ContentItem(id=item_id, type="text", content_text=content, expires_at=expires_at)
+    item = ContentItem(id=item_id, type="text", title=title or None, content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/markdown")
-async def add_markdown(content: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_markdown(content: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     if len(content.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Text content exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
-    item = ContentItem(id=item_id, type="markdown", content_text=content, expires_at=expires_at)
+    item = ContentItem(id=item_id, type="markdown", title=title or None, content_text=content, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/url")
-async def add_url(url: str = Form(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_url(url: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     if len(url.encode('utf-8')) > MAX_TEXT_SIZE:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"URL exceeds the maximum allowed size of {settings.max_text_size_mb}MB")
     item_id = generate_short_id(settings.id_length)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in) if expires_in else None
-    item = ContentItem(id=item_id, type="url", content_text=url, expires_at=expires_at)
+    item = ContentItem(id=item_id, type="url", title=title or None, content_text=url, expires_at=expires_at)
     session.add(item)
     session.commit()
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
 @app.post("/api/add/image")
-async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_image(file: UploadFile = File(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     content = await file.read()
     size = len(content)
     if size > MAX_FILE_SIZE:
@@ -112,7 +112,7 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
         "size": size
     }
     
-    item = ContentItem(id=item_id, type="image", metadata_json=json.dumps(metadata), expires_at=expires_at)
+    item = ContentItem(id=item_id, type="image", title=title or None, metadata_json=json.dumps(metadata), expires_at=expires_at)
     
     if size < MAX_BLOB_SIZE:
         item.content_blob = content
@@ -128,7 +128,7 @@ async def add_image(file: UploadFile = File(...), expires_in: Optional[int] = Fo
 
 
 @app.post("/api/add/file")
-async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
+async def add_file(file: UploadFile = File(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     content = await file.read()
     size = len(content)
     if size > MAX_FILE_SIZE:
@@ -167,7 +167,7 @@ async def add_file(file: UploadFile = File(...), expires_in: Optional[int] = For
         except UnicodeDecodeError:
             pass
 
-    item = ContentItem(id=item_id, type=item_type, metadata_json=json.dumps(metadata), expires_at=expires_at)
+    item = ContentItem(id=item_id, type=item_type, title=title or None, metadata_json=json.dumps(metadata), expires_at=expires_at)
     
     if item_type in ("text", "markdown"):
         item.content_text = content_text
