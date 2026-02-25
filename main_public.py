@@ -24,6 +24,18 @@ def get_full_url(item_id: str) -> str:
         return f"{settings.public_base_url.rstrip('/')}/{item_id}"
     return f"/{item_id}"
 
+def get_cache_headers(item: ContentItem) -> dict[str, str]:
+    if not item.expires_at:
+        # Cache for up to 1 year if it never expires
+        return {"Cache-Control": "public, max-age=31536000"}
+    
+    expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
+    time_to_live = (expires_at - datetime.now(timezone.utc)).total_seconds()
+    if time_to_live >= settings.minimum_cache_ttl_seconds:
+        return {"Cache-Control": f"public, max-age={int(time_to_live)}"}
+    else:
+        return {"Cache-Control": "no-cache, no-store, must-revalidate"}
+
 # Initialize the DB tables if not present
 init_db()
 ensure_uploads_dir()
@@ -137,25 +149,29 @@ async def get_item(request: Request, item_id: str, session: Session = Depends(ge
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    if item.expires_at and datetime.now(timezone.utc) >= item.expires_at:
-        raise HTTPException(status_code=410, detail="Item has expired")
+    if item.expires_at:
+        expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
+        if datetime.now(timezone.utc) >= expires_at:
+            raise HTTPException(status_code=410, detail="Item has expired")
+
+    cache_headers = get_cache_headers(item)
 
     if item.type == "text":
-        return templates.TemplateResponse("text.html", {"request": request, "content": item.content_text, "item": item})
+        return templates.TemplateResponse("text.html", {"request": request, "content": item.content_text, "item": item}, headers=cache_headers)
     
     elif item.type == "markdown":
         html_content = markdown.markdown(item.content_text, extensions=['fenced_code', 'tables'])
-        return templates.TemplateResponse("markdown.html", {"request": request, "html_content": html_content, "item": item})
+        return templates.TemplateResponse("markdown.html", {"request": request, "html_content": html_content, "item": item}, headers=cache_headers)
         
     elif item.type == "url":
-        return RedirectResponse(item.content_text, status_code=307)
+        return RedirectResponse(item.content_text, status_code=307, headers=cache_headers)
         
     elif item.type == "image":
-        return templates.TemplateResponse("image.html", {"request": request, "item": item})
+        return templates.TemplateResponse("image.html", {"request": request, "item": item}, headers=cache_headers)
         
     elif item.type == "file":
         metadata = item.metadata_dict
-        return templates.TemplateResponse("file.html", {"request": request, "item": item, "metadata": metadata})
+        return templates.TemplateResponse("file.html", {"request": request, "item": item, "metadata": metadata}, headers=cache_headers)
 
     return Response(status_code=500, content="Unknown type")
 
@@ -165,8 +181,10 @@ async def download_item(item_id: str, session: Session = Depends(get_session)):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    if item.expires_at and datetime.now(timezone.utc) >= item.expires_at:
-        raise HTTPException(status_code=410, detail="Item has expired")
+    if item.expires_at:
+        expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
+        if datetime.now(timezone.utc) >= expires_at:
+            raise HTTPException(status_code=410, detail="Item has expired")
 
     if item.type not in ("file", "image"):
         raise HTTPException(status_code=400, detail="Not a downloadable file")
@@ -175,10 +193,13 @@ async def download_item(item_id: str, session: Session = Depends(get_session)):
     filename = metadata.get("filename", item_id)
     content_type = metadata.get("content_type", "application/octet-stream")
 
+    cache_headers = get_cache_headers(item)
+
     if item.content_blob is not None:
         headers = {'Content-Disposition': f'attachment; filename="{filename}"'}
+        headers.update(cache_headers)
         return Response(content=item.content_blob, media_type=content_type, headers=headers)
     elif item.file_path and os.path.exists(item.file_path):
-        return FileResponse(item.file_path, filename=filename, media_type=content_type)
+        return FileResponse(item.file_path, filename=filename, media_type=content_type, headers=cache_headers)
     else:
         raise HTTPException(status_code=404, detail="File data not found")

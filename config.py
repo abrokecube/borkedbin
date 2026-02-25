@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Pruning task
     prune_interval_seconds: int = Field(default=60, description="How often the expired item pruning loop runs (seconds)")
 
+    # Caching
+    minimum_cache_ttl_seconds: int = Field(default=7200, description="Minimum time to expiry before caching is allowed (seconds). E.g. Cloudflare free tier min TTL is 2 hours (7200s).")
+
     # The magic sauce to allow nested env vars or dotenv files
     model_config = SettingsConfigDict(
         env_file=".env", 
