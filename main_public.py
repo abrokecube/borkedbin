@@ -26,13 +26,14 @@ def get_full_url(item_id: str) -> str:
 
 def get_cache_headers(item: ContentItem) -> dict[str, str]:
     if not item.expires_at:
-        # Cache for up to 1 year if it never expires
-        return {"Cache-Control": "public, max-age=31536000"}
+        # Cache for the configured maximum duration if it never expires
+        return {"Cache-Control": f"public, max-age={settings.maximum_cache_ttl_seconds}"}
     
     expires_at = item.expires_at.replace(tzinfo=timezone.utc) if item.expires_at.tzinfo is None else item.expires_at
     time_to_live = (expires_at - datetime.now(timezone.utc)).total_seconds()
     if time_to_live >= settings.minimum_cache_ttl_seconds:
-        return {"Cache-Control": f"public, max-age={int(time_to_live)}"}
+        cache_ttl = min(int(time_to_live), settings.maximum_cache_ttl_seconds)
+        return {"Cache-Control": f"public, max-age={cache_ttl}"}
     else:
         return {"Cache-Control": "no-cache, no-store, must-revalidate"}
 
