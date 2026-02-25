@@ -9,7 +9,7 @@ from typing import List
 from database import ContentItem, ApiKey, get_session
 from utils import generate_short_id
 
-app = FastAPI(title="Brokebin - Admin")
+app = FastAPI(title="Borkedbin - Admin")
 
 templates = Jinja2Templates(directory="templates")
 

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Brokebin - Create</title>
+    <title>Borkedbin - Create</title>
     <style>
         body {
             font-family: sans-serif;
@@ -123,7 +123,7 @@
 
 <body>
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 2rem;">Brokebin</h1>
+        <h1 style="text-align: center; margin-bottom: 2rem;">Borkedbin</h1>
 
         <div class="card" style="background: #e9ecef;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -216,14 +216,14 @@
 
         // Use local storage to persist API key
         document.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('brokebin_api_key');
+            const savedKey = localStorage.getItem('borkedbin_api_key');
             if (savedKey) {
                 document.getElementById('apiKey').value = savedKey;
             }
         });
 
         document.getElementById('apiKey').addEventListener('change', (e) => {
-            localStorage.setItem('brokebin_api_key', e.target.value);
+            localStorage.setItem('borkedbin_api_key', e.target.value);
         });
 
         // Tab switching logic

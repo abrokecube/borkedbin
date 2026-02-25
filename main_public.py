@@ -43,7 +43,7 @@ def get_cache_headers(item: ContentItem) -> dict[str, str]:
 init_db()
 ensure_uploads_dir()
 
-app = FastAPI(title="Brokebin - Public")
+app = FastAPI(title="Borkedbin - Public")
 
 # Set up templates
 if not os.path.exists("templates"):

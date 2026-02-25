@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # Public server and admin server ports
     public_host: str = Field(default="0.0.0.0", description="Host to bind the public server to")
     public_port: int = Field(default=8000, description="Port for the public server")
-    public_base_url: str = Field(default="", description="Base URL for generated public links (e.g. https://brokebin.com)")
+    public_base_url: str = Field(default="", description="Base URL for generated public links (e.g. https://borkedbin.com)")
     admin_host: str = Field(default="127.0.0.1", description="Host to bind the admin server to")
     admin_port: int = Field(default=8001, description="Port for the admin server")
     
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
         env_file=".env", 
         env_file_encoding="utf-8", 
         extra="ignore", 
-        env_prefix="BROKEBIN_"  # E.g., BROKEBIN_PUBLIC_PORT
+        env_prefix="BORKEDBIN_"  # E.g., BORKEDBIN_PUBLIC_PORT
     )
 
     @classmethod
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
         # It prioritizes: kwargs > env > defaults. 
         # By passing yaml_config directly as kwargs, it will be overridden by existing ENVIRONMENT variables by default Pydantic behavior IF we inject an EnvSettingsSource.
         # For simplicity, we just pass the yaml dictionary into the constructor.
-        # Environment variables with prefix BROKEBIN_ will automatically override kwargs in pydantic-settings 2.x unless configured otherwise, though in kwargs it takes precedence. 
+        # Environment variables with prefix BORKEDBIN_ will automatically override kwargs in pydantic-settings 2.x unless configured otherwise, though in kwargs it takes precedence. 
         # Wait, in Pydantic Settings, init kwargs take highest priority, so to let Env Vars win, we should instantiate first and then somehow merge?
         # Actually, let's just make a custom SettingsSource if we want strict precedence (Env > Yaml > Default).
         
@@ -86,7 +86,7 @@ def get_settings(yaml_path: str = "config.yaml") -> Settings:
     # Better yet, just check if the env var exists.
     
     for key, value in yaml_config.items():
-        env_var_name = f"BROKEBIN_{key.upper()}"
+        env_var_name = f"BORKEDBIN_{key.upper()}"
         if env_var_name not in os.environ:
             # Override with yaml if not in env
             if hasattr(env_settings, key):

@@ -9,7 +9,7 @@ from config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("brokebin.runner")
+logger = logging.getLogger("borkedbin.runner")
 
 async def run_public():
     config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port)
@@ -47,7 +47,7 @@ async def prune_expired_items():
         await asyncio.sleep(settings.prune_interval_seconds)
 
 async def main():
-    logger.info("Starting Brokebin Servers and Background Tasks...")
+    logger.info("Starting Borkedbin Servers and Background Tasks...")
     # Gather runs all awaitables concurrently
     await asyncio.gather(
         run_public(),
