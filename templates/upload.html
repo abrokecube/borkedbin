@@ -203,16 +203,25 @@
         const MAX_FILE_SIZE_MB = parseInt("{{ max_file_size_mb }}");
         const MAX_TEXT_SIZE_MB = parseInt("{{ max_text_size_mb }}");
 
-        // Use local storage to persist API key
+        // Use local storage to persist API key and Expiry
         document.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('borkedbin_api_key');
             if (savedKey) {
                 document.getElementById('apiKey').value = savedKey;
             }
+
+            const savedExpiry = localStorage.getItem('borkedbin_expiry');
+            if (savedExpiry) {
+                document.getElementById('expiresIn').value = savedExpiry;
+            }
         });
 
         document.getElementById('apiKey').addEventListener('change', (e) => {
             localStorage.setItem('borkedbin_api_key', e.target.value);
+        });
+
+        document.getElementById('expiresIn').addEventListener('change', (e) => {
+            localStorage.setItem('borkedbin_expiry', e.target.value);
         });
 
         // Tab switching logic
@@ -255,6 +264,44 @@
                     showResult(`Content is too large (${(textSize / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is ${MAX_TEXT_SIZE_MB} MB.`, false);
                     return;
                 }
+            }
+
+            // Client-side permission validation
+            try {
+                const permResponse = await fetch('/api/key_permissions', {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                if (!permResponse.ok) {
+                    showResult('Invalid or inactive API Key', false);
+                    return;
+                }
+                const permData = await permResponse.json();
+                const allowedTypes = permData.allowed_types;
+
+                if (!allowedTypes.includes('*')) {
+                    let intendedType = '';
+                    if (endpoint.includes('/add/text')) intendedType = 'text';
+                    else if (endpoint.includes('/add/markdown')) intendedType = 'markdown';
+                    else if (endpoint.includes('/add/url')) intendedType = 'url';
+                    else if (endpoint.includes('/add/file')) {
+                        const file = fileInput ? fileInput.files[0] : null;
+                        if (file) {
+                            if (file.type.startsWith('image/')) intendedType = 'image';
+                            else if (file.type.startsWith('audio/')) intendedType = 'audio';
+                            else if (file.type.startsWith('video/')) intendedType = 'video';
+                            else if (file.type === 'text/markdown' || file.name.endsWith('.md')) intendedType = 'markdown';
+                            else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml') intendedType = 'text';
+                            else intendedType = 'file';
+                        }
+                    }
+
+                    if (intendedType && !allowedTypes.includes(intendedType)) {
+                        showResult(`Your API key does not have permission to upload '${intendedType}' content.`, false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to verify API key permissions client-side:", error);
             }
 
             const submitBtn = form.querySelector('button[type="submit"]');

@@ -60,6 +60,13 @@ MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
 MAX_FILE_SIZE = settings.max_file_size_mb * 1024 * 1024
 MAX_TEXT_SIZE = settings.max_text_size_mb * 1024 * 1024
 
+@app.get("/api/key_permissions")
+async def get_key_permissions(api_key: ApiKey = Depends(verify_api_key)):
+    if api_key.allowed_types == "*":
+        return {"allowed_types": ["*"]}
+    return {"allowed_types": [t.strip() for t in api_key.allowed_types.split(",")]}
+
+
 @app.post("/api/add/text")
 async def add_text(content: str = Form(...), title: Optional[str] = Form(None), expires_in: Optional[int] = Form(None), session: Session = Depends(get_session), api_key: ApiKey = Depends(verify_api_key)):
     check_upload_permission(api_key, "text")
