@@ -2,27 +2,12 @@
 <html>
 
 <head>
-    <title>Borkedbin - Create</title>
+    <title>BorkedBin</title>
+    <link rel="stylesheet" href="/styles.css">
     <style>
-        body {
-            font-family: sans-serif;
-            background: #f4f6f9;
-            color: #333;
-            margin: 0;
-            padding: 2rem;
-        }
-
         .container {
             max-width: 800px;
             margin: auto;
-        }
-
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
         }
 
         .form-group {
@@ -37,11 +22,9 @@
 
         input[type="text"],
         input[type="password"],
-        textarea {
+        textarea, 
+        select {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
             box-sizing: border-box;
         }
 
@@ -50,44 +33,30 @@
             font-family: monospace;
         }
 
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            background: #007bff;
-            color: white;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
-
         .tabs {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 0.5rem;
+            gap: 5px;
+            margin-bottom: 1em;
+            border-bottom: 1px solid #5d5d5d;
+            padding-bottom: 0px;
             overflow-x: auto;
         }
 
         .tab {
             cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            padding: 5px 10px;
+            border-radius: 4px 4px 0 0;
             transition: background 0.2s;
             white-space: nowrap;
         }
 
         .tab:hover {
-            background: #e9ecef;
+            background: #5d5d5d;
         }
 
         .tab.active {
-            background: #007bff;
+            border: 1px solid #5d5d5d;
+            border-bottom: none;
             color: white;
         }
 
@@ -101,31 +70,29 @@
 
         #result {
             margin-top: 1rem;
-            padding: 1rem;
+            padding: 8px;
             border-radius: 4px;
             display: none;
             word-wrap: break-word;
         }
 
         .success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #2a3c30;
+            color: #83b88f;
+            border: 1px solid #4f6955;
         }
 
         .error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #442b2e;
+            color: #bd9398;
+            border: 1px solid #7f5459;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 2rem;">Borkedbin</h1>
-
-        <div class="card" style="background: #e9ecef;">
+        <div class="card" >
             <div class="form-group" style="margin-bottom: 0;">
                 <label for="apiKey">API Key</label>
                 <input type="password" id="apiKey" placeholder="Enter your API Key to create content">
@@ -136,8 +103,7 @@
             </div>
             <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
                 <label for="expiresIn">Expiry</label>
-                <select id="expiresIn"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                <select id="expiresIn">
                     <option value="">Never</option>
                     <option value="60">1 Hour</option>
                     <option value="1440">1 Day</option>
@@ -259,16 +225,27 @@
                 showResult('Please enter an API Key', false);
                 return;
             }
+            document.getElementById('result').style.display = 'none';
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.innerText = 'Uploading...';
+            submitBtn.disabled = true;
 
             // Client-side size validation
             const fileInput = form.querySelector('input[type="file"]');
             const textInput = form.querySelector('textarea') || form.querySelector('input[name="url"]');
+            var toValidateKey = false;
 
             if (fileInput && fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 if (file.size > MAX_FILE_SIZE) {
                     showResult(`File is too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is ${MAX_FILE_SIZE_MB} MB.`, false);
+                    submitBtn.innerText = originalBtnText;
+                    submitBtn.disabled = false;
                     return;
+                }
+                if (file.size > 1 * 1024 * 1024) {
+                    toValidateKey = true; // For files larger than 1MB, also validate permissions client-side
                 }
             }
 
@@ -276,60 +253,69 @@
                 const textSize = new Blob([textInput.value]).size;
                 if (textSize > MAX_TEXT_SIZE) {
                     showResult(`Content is too large (${(textSize / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is ${MAX_TEXT_SIZE_MB} MB.`, false);
+                    submitBtn.innerText = originalBtnText;
+                    submitBtn.disabled = false;
                     return;
+                }
+                if (textSize > 1 * 1024 * 1024) {
+                    toValidateKey = true; // For text larger than 1MB, also validate permissions client-side
                 }
             }
 
-            // Client-side permission validation
-            try {
-                const permResponse = await fetch('/api/key_permissions', {
-                    headers: { 'X-API-Key': apiKey }
-                });
-                if (!permResponse.ok) {
-                    showResult('Invalid or inactive API Key', false);
-                    return;
-                }
-                const permData = await permResponse.json();
-                const allowedTypes = permData.allowed_types;
-
-                if (!allowedTypes.includes('*')) {
-                    let intendedType = '';
-                    if (endpoint.includes('/add/text')) intendedType = 'text';
-                    else if (endpoint.includes('/add/markdown')) intendedType = 'markdown';
-                    else if (endpoint.includes('/add/url')) intendedType = 'url';
-                    else if (endpoint.includes('/add/file')) {
-                        const file = fileInput ? fileInput.files[0] : null;
-                        if (file) {
-                            if (file.type.startsWith('image/')) intendedType = 'image';
-                            else if (file.type.startsWith('audio/')) intendedType = 'audio';
-                            else if (file.type.startsWith('video/')) intendedType = 'video';
-                            else if (file.type === 'text/markdown' || file.name.endsWith('.md')) intendedType = 'markdown';
-                            else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml') intendedType = 'text';
-                            else intendedType = 'file';
-                        }
-                    }
-
-                    if (intendedType && !allowedTypes.includes(intendedType)) {
-                        showResult(`Your API key does not have permission to upload '${intendedType}' content.`, false);
+            if (toValidateKey) {
+                // Client-side permission validation
+                try {
+                    const permResponse = await fetch('/api/key_permissions', {
+                        headers: { 'X-API-Key': apiKey }
+                    });
+                    if (!permResponse.ok) {
+                        showResult('Invalid or inactive API Key', false);
+                        submitBtn.innerText = originalBtnText;
+                        submitBtn.disabled = false;
                         return;
                     }
+                    const permData = await permResponse.json();
+                    const allowedTypes = permData.allowed_types;
+    
+                    if (!allowedTypes.includes('*')) {
+                        let intendedType = '';
+                        if (endpoint.includes('/add/text')) intendedType = 'text';
+                        else if (endpoint.includes('/add/markdown')) intendedType = 'markdown';
+                        else if (endpoint.includes('/add/url')) intendedType = 'url';
+                        else if (endpoint.includes('/add/file')) {
+                            const file = fileInput ? fileInput.files[0] : null;
+                            if (file) {
+                                if (file.type.startsWith('image/')) intendedType = 'image';
+                                else if (file.type.startsWith('audio/')) intendedType = 'audio';
+                                else if (file.type.startsWith('video/')) intendedType = 'video';
+                                else if (file.type === 'text/markdown' || file.name.endsWith('.md')) intendedType = 'markdown';
+                                else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml') intendedType = 'text';
+                                else intendedType = 'file';
+                            }
+                        }
+    
+                        if (intendedType && !allowedTypes.includes(intendedType)) {
+                            showResult(`Your API key does not have permission to upload '${intendedType}' content.`, false);
+                            submitBtn.innerText = originalBtnText;
+                            submitBtn.disabled = false;
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to verify API key permissions client-side:", error);
+                    submitBtn.innerText = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-            } catch (error) {
-                console.error("Failed to verify API key permissions client-side:", error);
             }
 
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = 'Uploading...';
-            submitBtn.disabled = true;
-            document.getElementById('result').style.display = 'none';
 
             const formData = new FormData(form);
             const expiresIn = document.getElementById('expiresIn').value;
             if (expiresIn) {
                 formData.append('expires_in', expiresIn);
             }
-            const contentTitle = document.getElementById('contentTitle').value;
+            const contentTitleElement = document.getElementById('contentTitle');
+            const contentTitle = contentTitleElement.value.trim();
             if (contentTitle) {
                 formData.append('title', contentTitle);
             }
@@ -348,6 +334,7 @@
                 if (response.ok) {
                     const fullUrl = data.url.startsWith('http') ? data.url : window.location.origin + data.url;
                     showResult(`Success! Created at: <a href="${data.url}" target="_blank">${fullUrl}</a>`, true);
+                    contentTitleElement.value = '';
                     form.reset();
                 } else {
                     showResult(`Error: ${data.detail || 'Upload failed'}`, false);

@@ -47,7 +47,7 @@ async def prune_expired_items():
         await asyncio.sleep(settings.prune_interval_seconds)
 
 async def main():
-    logger.info("Starting Borkedbin Servers and Background Tasks...")
+    logger.info("Starting BorkedBin Servers and Background Tasks...")
     # Gather runs all awaitables concurrently
     await asyncio.gather(
         run_public(),

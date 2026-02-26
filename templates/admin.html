@@ -2,95 +2,8 @@
 <html>
 
 <head>
-    <title>Borkedbin - Admin Dashboard</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f4f6f9;
-            color: #333;
-            margin: 0;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: 0.75rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background: #f9f9f9;
-            font-weight: 600;
-        }
-
-        .btn {
-            padding: 0.4rem 0.8rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .badge {
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-        }
-
-        .badge-active {
-            background: #28a745;
-            color: white;
-        }
-
-        .badge-inactive {
-            background: #6c757d;
-            color: white;
-        }
-    </style>
+    <title>BorkedBin - Admin Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
@@ -107,11 +20,10 @@
             <h2>API Keys</h2>
             <form action="/keys/create" method="POST" style="margin-bottom: 1rem;">
                 <div style="margin-bottom: 0.5rem;">
-                    <input type="text" name="name" placeholder="New Key Name" required
-                        style="padding: 0.4rem; width: 200px;">
+                    <input type="text" name="name" placeholder="New Key Name" required>
                     <button type="submit" class="btn btn-primary">Create Key</button>
                 </div>
-                <div style="font-size: 0.9rem; color: #555;">
+                <div>
                     <label style="margin-right: 1rem;"><input type="checkbox" name="allow_all" value="true" checked>
                         Allow All</label>
                     <label><input type="checkbox" name="allowed_types_list" value="text"> Text</label>
@@ -132,22 +44,22 @@
                     <th>Status</th>
                     <th>Allowed Types</th>
                     <th>Created At</th>
-                    <th>Actions</th>
+                    <th style='width: 150px'></th>
                 </tr>
                 {% for key in keys %}
-                <tr>
+                <tr class="api-key-item">
                     <td>{{ key.id }}</td>
                     <td>{{ key.name }}</td>
                     <td><code>{{ key.key }}</code></td>
                     <td>
-                        <span class="badge {{ 'badge-active' if key.is_active else 'badge-inactive' }}">
-                            {{ 'Active' if key.is_active else 'Inactive' }}
-                        </span>
+                        {{ 'Active' if key.is_active else 'Inactive' }}
                     </td>
                     <td><code>{{ key.allowed_types }}</code></td>
                     <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        <a href="/keys/{{ key.id }}/edit" class="btn btn-primary" style="margin-right: 4px;">Edit</a>
+                    <td class="item-actions">
+                        <a href="/keys/{{ key.id }}/edit">
+                            <button type="button" class="btn btn-primary">Edit</button>
+                        </a>
                         <form action="/keys/{{ key.id }}/toggle" method="POST" style="display:inline;">
                             <button type="submit" class="btn btn-secondary">Toggle</button>
                         </form>
@@ -169,32 +81,36 @@
                     <th>Type</th>
                     <th>Created At</th>
                     <th>Expires At</th>
-                    <th>File Details</th>
-                    <th>Actions</th>
+                    <th style="max-width: 25%">File Details</th>
+                    <th style='width: 150px'></th>
                 </tr>
                 {% for item in items %}
-                <tr>
+                <tr class="content-item">
                     <td><code>{{ item.id }}</code></td>
                     <td>{{ item.type }}</td>
                     <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>{{ item.expires_at.strftime('%Y-%m-%d %H:%M') if item.expires_at else 'Never' }}</td>
-                    <td>
-                        {% filter truncate(30) %}
-                        {% if item.type in ('file', 'image') %}
+                    <td style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 25%;">
+                        {% if item.type in ('file', 'image', 'audio', 'video') %}
                         {{ item.metadata_dict.get('filename', 'N/A') }}
                         {% elif item.type == 'url' %}
-                        {{ item.content_text }}
+                        {{ item.content_text | default('') }}
+                        {% elif item.title %}
+                        Title: <i>{{ item.title | default('') }}</i>
+                        {% elif item.content_text %}
+                        <i>{{ item.content_text | truncate(50, True, '...') }}</i>
                         {% else %}
                         -
                         {% endif %}
-                        {% endfilter %}
                     </td>
-                    <td>
+                    <td class="item-actions">
                         <form action="/items/{{ item.id }}/delete" method="POST" style="display:inline;">
                             <button type="submit" class="btn btn-danger"
                                 onclick="return confirm('Delete this item?');">Delete</button>
                         </form>
-                        <a href="http://localhost:8000/{{ item.id }}" target="_blank" class="btn btn-primary">View</a>
+                        <a href="{{ base_url }}/{{ item.id }}" target="_blank">
+                            <button type="button" class="btn btn-primary">View</button>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

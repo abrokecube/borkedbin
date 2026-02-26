@@ -2,35 +2,47 @@
 <html>
 
 <head>
-    <title>{{ item.title if item.title else "Borkedbin - Markdown" }}</title>
+    <title>{{ item.title if item.title else "BorkedBin - Markdown" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
     <style>
         body {
-            font-family: sans-serif;
-            background: #fdfdfd;
-            color: #333;
+            font-family: "Exo 2", sans-serif;
+            background: #1a1a1a;
+            color: #eee;
             padding: 2rem;
             max-width: 800px;
             margin: auto;
-            line-height: 1.6;
+            line-height: 1.5;
+            font-size: 1em;
         }
 
         pre {
-            background: #f4f4f4;
+            background: #fff;
             padding: 1rem;
             border-radius: 4px;
             overflow-x: auto;
         }
 
         code {
-            background: #f4f4f4;
-            padding: 0.2rem 0.4rem;
+            background: hsla(0, 0%, 100%, 0.114);
+            font-size: 0.90em;
+            padding: 0.2rem 0.3rem;
+            margin: 5px 1px;
             border-radius: 3px;
-            font-family: monospace;
+            font-family: "Sometype Mono", monospace;
         }
 
         img {
             max-width: 100%;
             height: auto;
+        }
+
+        a {
+            color: #4ea1ff;
+            text-decoration: none;
         }
     </style>
 </head>

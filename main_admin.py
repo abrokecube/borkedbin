@@ -4,12 +4,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlmodel import Session, select
+from sqlalchemy import desc
 from typing import List
 
 from database import ContentItem, ApiKey, get_session
 from utils import generate_short_id
+from config import settings
 
-app = FastAPI(title="Borkedbin - Admin")
+app = FastAPI(title="BorkedBin - Admin")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -19,8 +21,8 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def admin_dashboard(request: Request, session: Session = Depends(get_session)):
-    items = session.exec(select(ContentItem).order_by(ContentItem.created_at.desc())).all()
-    keys = session.exec(select(ApiKey).order_by(ApiKey.created_at.desc())).all()
+    items = session.exec(select(ContentItem).order_by(desc(ContentItem.created_at))).all()  # type: ignore
+    keys = session.exec(select(ApiKey).order_by(desc(ApiKey.created_at))).all()  # type: ignore
     
     # Calculate some basic stats
     total_items = len(items)
@@ -35,10 +37,15 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
             "total_items": total_items,
             "total_keys": total_keys,
             "active_keys": active_keys
-        }
+        },
+        "base_url": settings.public_base_url.strip("/")   
     })
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
+
+@app.get("/styles.css", include_in_schema=False)
+async def get_styles_css():
+    return FileResponse("static/admin_styles.css", headers={"Cache-Control": "public, max-age=3600"})
 
 @app.post("/items/{item_id}/delete")
 async def delete_item(item_id: str, session: Session = Depends(get_session)):

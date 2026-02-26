@@ -2,70 +2,26 @@
 <html>
 
 <head>
-    <title>{{ item.title if item.title else "Borkedbin - File Download" }}</title>
+    <title>{{ item.title if item.title else "BorkedBin - File Download" }}</title>
+    <link rel="stylesheet" href="/styles.css">
     <style>
-        body {
-            font-family: sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
 
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
-
-        h1 {
-            margin-top: 0;
-            color: #333;
-        }
-
-        p {
-            color: #666;
-            margin-bottom: 2rem;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #007bff;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
     </style>
 </head>
 
 <body>
-    <div class="card">
-        <h1>File Download</h1>
-        <p>
-            <strong>Filename:</strong> {{ metadata.get("filename", item.id) }}<br>
-            <strong>Size:</strong> {{ '{:.2f}'.format(metadata.get("size", 0) / 1024) }} KB<br>
-            {% if metadata.get("magic_mime") %}
-            <strong>Type:</strong> {{ metadata.get("magic_mime") }}<br>
-            {% endif %}
-            {% if metadata.get("magic_description") %}
-            <strong>Description:</strong> {{ metadata.get("magic_description") }}<br>
-            {% endif %}
-        </p>
-        <a href="/download/{{ item.id }}" class="btn">Download File</a>
-    </div>
+    <h1>File</h1>
+    <p>
+        <strong>Filename:</strong> {{ metadata.get("filename", item.id) }}<br>
+        <strong>Size:</strong> {{ '{:.2f}'.format(metadata.get("size", 0) / 1024) }} KB<br>
+        {% if metadata.get("magic_mime") %}
+        <strong>Type:</strong> {{ metadata.get("magic_mime") }}<br>
+        {% endif %}
+        {% if metadata.get("magic_description") %}
+        <strong>Description:</strong> {{ metadata.get("magic_description") }}<br>
+        {% endif %}
+    </p>
+    <a href="/download/{{ item.id }}" class="btn">Download File</a>
 </body>
 
 </html>

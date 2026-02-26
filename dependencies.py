@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status, Header
-from sqlmodel import Session
+from sqlmodel import Session, select
 from database import engine, ApiKey
 
 def get_session():
@@ -12,7 +12,7 @@ def verify_api_key(x_api_key: str = Header(None), session: Session = Depends(get
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing API Key header: X-API-Key",
         )
-    key_record = session.query(ApiKey).filter(ApiKey.key == x_api_key, ApiKey.is_active == True).first()
+    key_record = session.exec(select(ApiKey).where(ApiKey.key == x_api_key, ApiKey.is_active == True)).first()
     if not key_record:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

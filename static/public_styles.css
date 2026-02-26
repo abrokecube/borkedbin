@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap');
+:root {
+    --font-family: "Exo 2", sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: 13px;
+    background: #181818;
+    color: #cecaca;
+    margin: 0;
+    padding: 2rem;
+}
+
+code {
+    font-family: "Sometype Mono", monospace;
+    font-size: 0.95em;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.card {
+    margin-bottom: 2rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+button, label {
+    font-family: inherit;
+    font-size: inherit;
+    user-select: none;
+}
+
+.btn {
+    /* padding: 1px 5px 3px 5px; */
+    padding: 0.2rem 0.45rem;
+    margin: 0px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    background: #343434;
+    color: inherit;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-primary {
+    background: #0469d5;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.badge {
+    padding: 1px 5px 3px 5px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.badge-active {
+    background: #28a745;
+    color: white;
+}
+
+.badge-inactive {
+    background: #6c757d;
+    color: white;
+}
+
+.item-actions {
+    opacity: 0;
+}
+
+tr:hover {
+    background: #ffffff15;
+
+    .item-actions {
+        opacity: 1;
+    }
+}
+
+h1, h2 {
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+}
+
+input, textarea, select {
+    padding: 0.2rem 0.45rem;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    background-color: #343434;
+    color: inherit;
+}
+
+select {
+    padding: 0.2rem;
+}
+
+input[type='file'] {
+    border: 1px dashed #505050;
+}
+
+a {
+    color: #b35281;
+}
