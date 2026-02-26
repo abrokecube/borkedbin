@@ -8,6 +8,9 @@ from database import engine, ContentItem
 from config import settings
 from utils import setup_logging
 
+with open('pid', 'w') as f:
+    f.write(str(os.getpid()))
+    
 # Configure logging
 setup_logging(level=logging.INFO)
 logger = logging.getLogger("main")
