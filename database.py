@@ -5,10 +5,8 @@ from typing import Optional, Any
 from sqlmodel import SQLModel, Field, Session, create_engine
 from config import settings
 
-# Path to the sqlite database
 DATABASE_URL = settings.database_url
 
-# Ensure the database engine uses connect_args for sqlite to allow multi-threading in fastapi
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 class ApiKey(SQLModel, table=True):
@@ -42,13 +40,6 @@ class ContentItem(SQLModel, table=True):
 def init_db():
     SQLModel.metadata.create_all(engine)
     
-    # # Create a default API key if none exists for easy testing
-    # with Session(engine) as session:
-    #     if not session.query(ApiKey).first():
-    #         default_key = ApiKey(key="default_secret_key", name="Initial Key")
-    #         session.add(default_key)
-    #         session.commit()
-
 def get_session():
     with Session(engine) as session:
         yield session

@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     # ID generation
     id_length: int = Field(default=8, description="Length of generated IDs")
 
-    # The magic sauce to allow nested env vars or dotenv files
     model_config = SettingsConfigDict(
         env_file=".env", 
         env_file_encoding="utf-8", 
@@ -48,19 +47,8 @@ class Settings(BaseSettings):
             except Exception as e:
                 import logging
                 logging.warning(f"Failed to parse {yaml_path}: {e}")
-        
-        # pydantic BaseSettings natively handles overlapping args and env variables.
-        # It prioritizes: kwargs > env > defaults. 
-        # By passing yaml_config directly as kwargs, it will be overridden by existing ENVIRONMENT variables by default Pydantic behavior IF we inject an EnvSettingsSource.
-        # For simplicity, we just pass the yaml dictionary into the constructor.
-        # Environment variables with prefix BORKEDBIN_ will automatically override kwargs in pydantic-settings 2.x unless configured otherwise, though in kwargs it takes precedence. 
-        # Wait, in Pydantic Settings, init kwargs take highest priority, so to let Env Vars win, we should instantiate first and then somehow merge?
-        # Actually, let's just make a custom SettingsSource if we want strict precedence (Env > Yaml > Default).
-        
-        # A simpler approach: create the object, then manually override with environment variables if they exist.
-        pass
+                pass
 
-# Custom config initialization to ensure Env > Yaml > Default precedence
 def get_settings(yaml_path: str = "config.yaml") -> Settings:
     yaml_config = {}
     if os.path.exists(yaml_path):
@@ -73,18 +61,8 @@ def get_settings(yaml_path: str = "config.yaml") -> Settings:
              import logging
              logging.warning(f"Failed to parse {yaml_path}: {e}")
              
-    # Create the base settings using just the YAML dict. 
-    # NOTE: By default, instantiation kwargs OVERRIDE env variables in Pydantic. 
-    # To fix this, we can pull env variables manually or use BaseSettings._settings_build_values.
-    # The simplest way is to just let Pydantic handle Env Vars first, then only update fields from YAML if they ARE NOT explicitly set in the Env vars.
-    
-    # 1. Load pure env vars and defaults
     env_settings = Settings() 
-    
-    # 2. For each key in yaml, if the environment didn't set it (meaning env_settings value == default value), we apply the YAML value.
-    # What if the env var IS the default value? That's fine.
-    # Better yet, just check if the env var exists.
-    
+        
     for key, value in yaml_config.items():
         env_var_name = f"BORKEDBIN_{key.upper()}"
         if env_var_name not in os.environ:

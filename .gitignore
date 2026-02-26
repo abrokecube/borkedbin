@@ -13,3 +13,5 @@ db.sqlite
 uploads/
 config.yaml
 *.env
+
+logs/

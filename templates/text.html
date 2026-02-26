@@ -23,7 +23,6 @@
             margin-top: 0;
         }
 
-        /* Default styles for pre; actual wrapping controlled by the document-level classes */
         pre {
             font-family: "Sometype Mono", monospace;
             line-height: 1.4;
@@ -35,13 +34,12 @@
             margin-bottom: calc(100vh - 1.5rem - 3rem * var(--text-zoom));
         }
 
-        /* When wrap is enabled */
         .wrap-enabled pre {
             white-space: pre-wrap;
             word-wrap: break-word;
+            max-width: 800px;
         }
 
-        /* When wrap is disabled, allow horizontal scrolling */
         .wrap-disabled pre {
             white-space: pre;
             overflow-x: auto;
@@ -86,7 +84,9 @@
         <span style="flex-grow: 1;"></span>
         <span id="text-length" class="info">{{ content|length }} chars</span>
     </div>
-    <pre id="text-content">{{ content }}</pre>
+    <div style="display: flex; flex-direction: row; justify-content: center;">
+        <pre id="text-content">{{ content }}</pre>
+    </div>
 
     <script>
         (function(){

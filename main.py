@@ -6,10 +6,11 @@ from datetime import datetime, timezone
 from sqlmodel import Session, select
 from database import engine, ContentItem
 from config import settings
+from utils import setup_logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("borkedbin.runner")
+setup_logging(level=logging.INFO)
+logger = logging.getLogger("main")
 
 async def run_public():
     config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port)
@@ -26,7 +27,7 @@ async def prune_expired_items():
         try:
             with Session(engine) as session:
                 now = datetime.now(timezone.utc)
-                statement = select(ContentItem).where(ContentItem.expires_at <= now)
+                statement = select(ContentItem).where(ContentItem.expires_at <= now)  # type: ignore
                 expired_items = session.exec(statement).all()
                 if expired_items:
                     for item in expired_items:
