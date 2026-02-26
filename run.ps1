@@ -1,2 +1,2 @@
-$host.ui.RawUI.WindowTitle = "rf-webops"
+$host.ui.RawUI.WindowTitle = "borkedbin"
 uv run main.py
