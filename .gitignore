@@ -16,3 +16,6 @@ config.yaml
 
 logs/
 pid
+
+libmagic.dll
+magic.mgc
