@@ -5,29 +5,159 @@
     <title>{{ item.title if item.title else "BorkedBin - Text" }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">        
+    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    
         
     <style>
 
-        body {
-            font-family: "Sometype Mono", monospace;
-            font-size: 0.8em;
-            background: #1a1a1a;
-            color: #eee;
-            padding: 1rem;
+        :root {
+            --text-zoom: 1;
         }
 
+        body {
+            font-family: "Sometype Mono", monospace;
+            font-size: 0.9em;
+            background: #1a1a1a;
+            color: #eee;
+            margin-top: 0;
+        }
+
+        /* Default styles for pre; actual wrapping controlled by the document-level classes */
         pre {
             font-family: "Sometype Mono", monospace;
+            line-height: 1.4;
+            margin: 0;
+            padding-top: 0.5rem;
+            font-size: calc(1em * var(--text-zoom));
+            scrollbar-width: thin;
+            scrollbar-color: #555 #1a1a1a;
+            margin-bottom: calc(100vh - 1.5rem - 3rem * var(--text-zoom));
+        }
+
+        /* When wrap is enabled */
+        .wrap-enabled pre {
             white-space: pre-wrap;
             word-wrap: break-word;
-            line-height: 1.4;
         }
+
+        /* When wrap is disabled, allow horizontal scrolling */
+        .wrap-disabled pre {
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .button {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .button:hover {
+            background-color: #ffffff36;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #373737; 
+            padding-top: 3px;
+            padding-bottom: 3px; 
+            display:flex; 
+            align-items:center; 
+            gap: 8px;
+            background-color: inherit;
+
+            .info {
+                color: #9a9a9a;
+                font-size: 0.9em;
+            }
+        }
+
     </style>
 </head>
 
 <body>
-    <pre>{{ content }}</pre>
+    <div class="top-bar">
+        <span class="button" id="wordwrap-toggle">[wrap: on]</span>
+        <span class="button" id="zoom-out">[-]</span>
+        <span class="button" id="zoom-in">[+]</span>
+        <span id="zoom-status" class="info">100%</span>
+        <span style="flex-grow: 1;"></span>
+        <span id="text-length" class="info">{{ content|length }} chars</span>
+    </div>
+    <pre id="text-content">{{ content }}</pre>
+
+    <script>
+        (function(){
+            const button = document.getElementById('wordwrap-toggle');
+            const zoomInEl = document.getElementById('zoom-in');
+            const zoomOutEl = document.getElementById('zoom-out');
+            const zoomStatus = document.getElementById('zoom-status');
+            const root = document.documentElement;
+
+            const ZOOM_KEY = 'textZoom';
+            const ZOOM_STEP = 0.1;
+            const ZOOM_MIN = 0.5;
+            const ZOOM_MAX = 3.0;
+
+            function setZoom(z){
+                const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+                root.style.setProperty('--text-zoom', String(clamped));
+                if(zoomStatus) zoomStatus.textContent = Math.round(clamped*100) + '%';
+                try{ localStorage.setItem(ZOOM_KEY, String(clamped)); }catch(e){}
+            }
+
+            function applyState(enabled){
+                if(enabled){
+                    root.classList.add('wrap-enabled');
+                    root.classList.remove('wrap-disabled');
+                    button.innerText = '[wrap: on]';
+                    button.setAttribute('aria-pressed', 'true');
+                } else {
+                    root.classList.add('wrap-disabled');
+                    root.classList.remove('wrap-enabled');
+                    button.innerText = '[wrap:off]';
+                    button.setAttribute('aria-pressed', 'false');
+                }
+            }
+
+            // Read stored preferences
+            try {
+                const storedWrap = localStorage.getItem('wordWrap');
+                const enabled = storedWrap === null ? true : (storedWrap === '1' || storedWrap === 'true');
+                applyState(enabled);
+            } catch (e) {
+                applyState(true);
+            }
+
+            // Zoom: read stored zoom or default to 1
+            try{
+                const storedZoom = parseFloat(localStorage.getItem(ZOOM_KEY));
+                setZoom(isNaN(storedZoom) ? 1 : storedZoom);
+            }catch(e){ setZoom(1); }
+
+            button.addEventListener('click', function(){
+                const enabled = root.classList.contains('wrap-enabled');
+                const newState = !enabled;
+                applyState(newState);
+                try { localStorage.setItem('wordWrap', newState ? '1' : '0'); } catch(e){}
+            });
+
+            if(zoomInEl){
+                zoomInEl.addEventListener('click', function(){
+                    const current = parseFloat(getComputedStyle(root).getPropertyValue('--text-zoom')) || 1;
+                    setZoom(current + ZOOM_STEP);
+                });
+            }
+            if(zoomOutEl){
+                zoomOutEl.addEventListener('click', function(){
+                    const current = parseFloat(getComputedStyle(root).getPropertyValue('--text-zoom')) || 1;
+                    setZoom(current - ZOOM_STEP);
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>
