@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, Depends, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlmodel import Session, select
@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: StarletteHTTPException):
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return FileResponse("static/404.html", status_code=404, headers={"Cache-Control": "public, max-age=3600"})
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def admin_dashboard(request: Request, session: Session = Depends(get_session)):
@@ -27,7 +27,7 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
     total_keys = len(keys)
     active_keys = sum(1 for k in keys if k.is_active)
     
-    return templates.TemplateResponse("admin.html", {
+    response = templates.TemplateResponse("admin.html", {
         "request": request,
         "items": items,
         "keys": keys,
@@ -37,6 +37,8 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
             "active_keys": active_keys
         }
     })
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
 
 @app.post("/items/{item_id}/delete")
 async def delete_item(item_id: str, session: Session = Depends(get_session)):
@@ -69,16 +71,20 @@ async def create_key(
     session.commit()
     return RedirectResponse(url="/", status_code=303)
 
-@app.get("/keys/{key_id}/edit", response_class=HTMLResponse)
-async def edit_key_page(request: Request, key_id: int, session: Session = Depends(get_session)):
+@app.get("/api/admin/keys/{key_id}")
+async def get_key_data(key_id: int, session: Session = Depends(get_session)):
     key_record = session.get(ApiKey, key_id)
     if not key_record:
         raise HTTPException(status_code=404, detail="Key not found")
-        
-    return templates.TemplateResponse("edit_key.html", {
-        "request": request,
-        "key": key_record
-    })
+    return {
+        "id": key_record.id,
+        "name": key_record.name,
+        "allowed_types": key_record.allowed_types
+    }
+
+@app.get("/keys/{key_id}/edit", include_in_schema=False)
+async def edit_key_page(key_id: int):
+    return FileResponse("static/edit_key.html", headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
 
 @app.post("/keys/{key_id}/edit")
 async def edit_key_post(

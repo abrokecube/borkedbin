@@ -45,20 +45,24 @@ ensure_uploads_dir()
 
 app = FastAPI(title="Borkedbin - Public")
 
-# Set up templates
-if not os.path.exists("templates"):
-    os.makedirs("templates")
 templates = Jinja2Templates(directory="templates")
 
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: StarletteHTTPException):
     if request.url.path.count("/") == 1:
-        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+        return FileResponse("static/404.html", status_code=404, headers={"Cache-Control": "public, max-age=3600"})
     return Response(content="404 Not Found", media_type="text/plain", status_code=404)
 
 MAX_BLOB_SIZE = settings.max_blob_size_kb * 1024  # from KB to Bytes
 MAX_FILE_SIZE = settings.max_file_size_mb * 1024 * 1024
 MAX_TEXT_SIZE = settings.max_text_size_mb * 1024 * 1024
+
+@app.get("/api/config")
+async def get_config():
+    return {
+        "max_file_size_mb": settings.max_file_size_mb,
+        "max_text_size_mb": settings.max_text_size_mb
+    }
 
 @app.get("/api/key_permissions")
 async def get_key_permissions(api_key: ApiKey = Depends(verify_api_key)):
@@ -169,17 +173,13 @@ async def add_file(file: UploadFile = File(...), title: Optional[str] = Form(Non
     return {"id": item_id, "url": get_full_url(item_id)}
 
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+@app.get("/", include_in_schema=False)
+async def index():
+    return FileResponse("static/index.html", headers={"Cache-Control": "public, max-age=3600"})
 
-@app.get("/upload", response_class=HTMLResponse, include_in_schema=False)
-async def upload(request: Request):
-    return templates.TemplateResponse("upload.html", {
-        "request": request,
-        "max_file_size_mb": settings.max_file_size_mb,
-        "max_text_size_mb": settings.max_text_size_mb
-    })
+@app.get("/upload", include_in_schema=False)
+async def upload():
+    return FileResponse("static/upload.html", headers={"Cache-Control": "public, max-age=3600"})
 
 @app.get("/{item_id}", response_class=HTMLResponse, include_in_schema=False)
 async def get_item(request: Request, item_id: str, session: Session = Depends(get_session)):
