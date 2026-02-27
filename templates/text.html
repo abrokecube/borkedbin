@@ -34,7 +34,13 @@
             margin-bottom: calc(100vh - 1.5rem - 3rem * var(--text-zoom));
         }
 
-        .wrap-enabled pre {
+        .wrap-full pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        .wrap-comfortable pre {
             white-space: pre-wrap;
             word-wrap: break-word;
             max-width: 800px;
@@ -77,7 +83,7 @@
 
 <body>
     <div class="top-bar">
-        <span class="button" id="wordwrap-toggle">[wrap: on]</span>
+        <span class="button" id="wordwrap-toggle">[wrap: full]</span>
         <span class="button" id="zoom-out">[-]</span>
         <span class="button" id="zoom-in">[+]</span>
         <span id="zoom-status" class="info">100%</span>
@@ -108,27 +114,37 @@
                 try{ localStorage.setItem(ZOOM_KEY, String(clamped)); }catch(e){}
             }
 
-            function applyState(enabled){
-                if(enabled){
-                    root.classList.add('wrap-enabled');
-                    root.classList.remove('wrap-disabled');
-                    button.innerText = '[wrap: on]';
-                    button.setAttribute('aria-pressed', 'true');
-                } else {
+            function applyState(mode){
+                root.classList.remove('wrap-full', 'wrap-comfortable', 'wrap-disabled');
+                if(mode === 'full'){
+                    root.classList.add('wrap-full');
+                    button.innerText = '[wrap: full]';
+                }else if(mode === 'comfortable'){
+                    root.classList.add('wrap-comfortable');
+                    button.innerText = '[wrap:comfy]';
+                }else{
                     root.classList.add('wrap-disabled');
-                    root.classList.remove('wrap-enabled');
-                    button.innerText = '[wrap:off]';
-                    button.setAttribute('aria-pressed', 'false');
+                    button.innerText = '[wrap: off ]';
                 }
+                button.setAttribute('aria-pressed', mode !== 'off' ? 'true' : 'false');
             }
+
+            function getNextMode(current){
+                if(current === 'full') return 'comfortable';
+                if(current === 'comfortable') return 'off';
+                return 'full';
+            }
+
+            const MODES = ['full', 'comfortable', 'off'];
 
             // Read stored preferences
             try {
                 const storedWrap = localStorage.getItem('wordWrap');
-                const enabled = storedWrap === null ? true : (storedWrap === '1' || storedWrap === 'true');
-                applyState(enabled);
+                let mode = storedWrap ? storedWrap : 'full';
+                if(!MODES.includes(mode)) mode = 'full';
+                applyState(mode);
             } catch (e) {
-                applyState(true);
+                applyState('full');
             }
 
             // Zoom: read stored zoom or default to 1
@@ -138,10 +154,12 @@
             }catch(e){ setZoom(1); }
 
             button.addEventListener('click', function(){
-                const enabled = root.classList.contains('wrap-enabled');
-                const newState = !enabled;
-                applyState(newState);
-                try { localStorage.setItem('wordWrap', newState ? '1' : '0'); } catch(e){}
+                let currentMode = 'full';
+                if(root.classList.contains('wrap-comfortable')) currentMode = 'comfortable';
+                else if(root.classList.contains('wrap-disabled')) currentMode = 'off';
+                const newMode = getNextMode(currentMode);
+                applyState(newMode);
+                try { localStorage.setItem('wordWrap', newMode); } catch(e){}
             });
 
             if(zoomInEl){
