@@ -311,22 +311,49 @@
 
             const formData = new FormData(form);
             const expiresIn = document.getElementById('expiresIn').value;
-            if (expiresIn) {
-                formData.append('expires_in', expiresIn);
-            }
             const contentTitleElement = document.getElementById('contentTitle');
             const contentTitle = contentTitleElement.value.trim();
-            if (contentTitle) {
-                formData.append('title', contentTitle);
-            }
+
+            const isFileUpload = endpoint.includes('/add/file');
 
             try {
+                let body;
+                const headers = {
+                    'X-API-Key': apiKey
+                };
+
+                if (isFileUpload) {
+                    if (expiresIn) {
+                        formData.append('expires_in', expiresIn);
+                    }
+                    if (contentTitle) {
+                        formData.append('title', contentTitle);
+                    }
+                    body = formData;
+                } else {
+                    const jsonBody = {};
+                    
+                    if (endpoint.includes('/add/text') || endpoint.includes('/add/markdown')) {
+                        jsonBody.content = formData.get('content');
+                    } else if (endpoint.includes('/add/url')) {
+                        jsonBody.url = formData.get('url');
+                    }
+                    
+                    if (expiresIn) {
+                        jsonBody.expires_in = parseInt(expiresIn);
+                    }
+                    if (contentTitle) {
+                        jsonBody.title = contentTitle;
+                    }
+                    
+                    headers['Content-Type'] = 'application/json';
+                    body = JSON.stringify(jsonBody);
+                }
+
                 const response = await fetch(endpoint, {
                     method: 'POST',
-                    headers: {
-                        'X-API-Key': apiKey
-                    },
-                    body: formData
+                    headers: headers,
+                    body: body
                 });
 
                 const data = await response.json();
