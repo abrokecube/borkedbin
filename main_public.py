@@ -19,7 +19,7 @@ from fastapi.responses import (
     Response,
     JSONResponse,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.staticfiles import StaticFiles
@@ -36,24 +36,24 @@ from config import settings
 
 class TextRequest(BaseModel):
     content: str
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=80)
     expires_in: Optional[int] = None
 
 
 class MarkdownRequest(BaseModel):
     content: str
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=80)
     expires_in: Optional[int] = None
 
 
 class UrlRequest(BaseModel):
     url: str
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=80)
     expires_in: Optional[int] = None
 
 
 class FileRequest(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=80)
     expires_in: Optional[int] = None
 
 
@@ -125,12 +125,14 @@ async def get_styles_css():
     return FileResponse(
         "static/public_styles.css", headers={"Cache-Control": "public, max-age=3600"}
     )
-    
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon():
     return FileResponse(
         "static/favicon.ico", headers={"Cache-Control": "public, max-age=3600"}
     )
+
 
 @app.get("/api/config")
 async def get_config():

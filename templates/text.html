@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="robots" content="noindex">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#1a1a1a">
     <meta property="og:site_name" content="BorkedBin">
     <meta property="og:title" content="{{ item.title if item.title else item.id }}">
     {% set snippet = content.split('\n',1)[0][:200] %}
@@ -26,7 +28,7 @@
             font-size: 0.9em;
             background: #1a1a1a;
             color: #eee;
-            margin-top: 0;
+            margin: 0;
         }
 
         pre {
@@ -34,11 +36,12 @@
             line-height: 1.4;
             margin: 0;
             padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
             font-size: calc(1em * var(--text-zoom));
             scrollbar-width: thin;
             scrollbar-color: #555 #1a1a1a;
-            margin-bottom: calc(100vh - 1.5rem - 3rem * var(--text-zoom));
+            padding-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom));
+            padding-left: 6px;
+            padding-right: 6px;
         }
 
         .wrap-full pre {
@@ -64,6 +67,11 @@
             white-space: nowrap;
         }
 
+        a.button {
+            color: inherit;
+            text-decoration: none;
+        }
+
         .button:hover {
             background-color: #ffffff36;
         }
@@ -72,13 +80,17 @@
             position: sticky;
             top: 0;
             border-bottom: 1px solid #373737; 
-            padding-top: 3px;
-            padding-bottom: 3px; 
-            display:flex; 
-            align-items:center; 
+            padding-top: 2px;
+            padding-bottom: 4px; 
+            padding-left: 6px;
+            padding-right: 6px;
+            display: flex; 
+            align-items: center; 
             gap: 8px;
             background-color: inherit;
             user-select: none;
+            white-space: nowrap;
+            overflow-x: scroll;
 
             .info {
                 color: #9a9a9a;
@@ -97,6 +109,7 @@
         <span id="zoom-status" class="info">100%</span>
         <span style="flex-grow: 1;"></span>
         <span id="text-length" class="info">{{ '{:,}'.format(content|length) }} chars</span>
+        <a href="./raw/{{ item.id }}" class="button">[raw]</a>
     </div>
     <div style="display: flex; flex-direction: row; justify-content: center;">
         <pre id="text-content">{{ content }}</pre>
