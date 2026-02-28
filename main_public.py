@@ -125,7 +125,12 @@ async def get_styles_css():
     return FileResponse(
         "static/public_styles.css", headers={"Cache-Control": "public, max-age=3600"}
     )
-
+    
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon():
+    return FileResponse(
+        "static/favicon.ico", headers={"Cache-Control": "public, max-age=3600"}
+    )
 
 @app.get("/api/config")
 async def get_config():

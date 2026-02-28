@@ -47,6 +47,12 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
 async def get_styles_css():
     return FileResponse("static/admin_styles.css", headers={"Cache-Control": "public, max-age=3600"})
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon():
+    return FileResponse(
+        "static/favicon_admin.ico", headers={"Cache-Control": "public, max-age=3600"}
+    )
+
 @app.post("/items/{item_id}/delete")
 async def delete_item(item_id: str, session: Session = Depends(get_session)):
     item = session.get(ContentItem, item_id)

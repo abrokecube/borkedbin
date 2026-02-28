@@ -2,15 +2,18 @@
 <html>
 
 <head>
-    <title>{{ item.title if item.title else "BorkedBin - Text" }}</title>
+    <title>{{ item.title if item.title else item.id }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <meta property="og:site_name" content="BorkedBin">
+    <meta property="og:title" content="{{ item.title if item.title else item.id }}">
+    <meta property="og:description" content="Text - {{ '{:,}'.format(content|length) }} chars">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
     
-        
     <style>
-
         :root {
             --text-zoom: 1;
         }
@@ -72,6 +75,7 @@
             align-items:center; 
             gap: 8px;
             background-color: inherit;
+            user-select: none;
 
             .info {
                 color: #9a9a9a;
@@ -89,7 +93,7 @@
         <span class="button" id="zoom-in">[+]</span>
         <span id="zoom-status" class="info">100%</span>
         <span style="flex-grow: 1;"></span>
-        <span id="text-length" class="info">{{ content|length }} chars</span>
+        <span id="text-length" class="info">{{ '{:,}'.format(content|length) }} chars</span>
     </div>
     <div style="display: flex; flex-direction: row; justify-content: center;">
         <pre id="text-content">{{ content }}</pre>
