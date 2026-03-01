@@ -33,40 +33,104 @@
             background: var(--bg);
             color: var(--text);
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: 
+                rgb(from var(--text) r g b / 0.25) 
+                rgb(from var(--bg) r g b / 0.25);
         }
 
-        pre {
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgb(from var(--bg) r g b / 0.25);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgb(from var(--text) r g b / 0.25);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgb(from var(--text) r g b / 0.5);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: rgb(from var(--bg) r g b / 0.25);
+        }
+
+        #text-content {
             font-family: "Sometype Mono", monospace;
             line-height: 1.4;
-            margin: 0;
+            margin: auto;
             font-size: calc(1em * var(--text-zoom));
+            padding: 6px;
+            width: fit-content;
+            position: relative;    
+            padding-top: calc(6px + 6px + 1rem);
+
+        }
+
+        #text-container {
+            padding: 0px;
+            margin: 0px;
             scrollbar-width: thin;
-            scrollbar-color: rgb(from var(--text) r g b / 0.25) var(--bg);
-            padding-top: 6px;
-            padding-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom));
-            padding-left: 6px;
-            padding-right: 6px;
+            scrollbar-color: 
+                rgb(from var(--text) r g b / 0.25) 
+                rgb(from var(--bg) r g b / 0.25);
+            overflow: none;
+            flex-grow: 1;
+            gap: 0;
+            align-items: flex-start;
+
+            #text-container-inner {
+                width: max-content;
+                min-width: 100%;
+            }
 
             &.wrap-full {
-                white-space: pre-wrap;
-                word-wrap: break-word;
                 max-width: 100%;
+
+                #text-container-inner {
+                    max-width: 100%;
+                }
+
+                #text-content {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    max-width: 100%;
+                }
             }
 
             &.wrap-comfortable {
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                max-width: 800px;
-            }
-
-            &.wrap-off {
-                white-space: pre;
-                overflow-x: auto;
-
-                &.page-wide {
-                    padding-right: calc(6px + 10rem);
+                #text-content {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    max-width: 800px;
                 }
             }
+
+            &.wrap-off.page-wide #text-content {
+                border-right: 1px solid rgb(from var(--text) r g b / 0.15);
+                margin-right: calc(6px + 10rem);
+            }
+
+            hr {
+                margin: 0;
+                min-width: 100%;
+                width: max-content;
+                border: none;
+                border-bottom: 1px solid rgb(from var(--text) r g b / 0.15);
+            }
+
+            #bottom-pad {
+                /* margin-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom)); */
+                margin-bottom: 75vh;
+            }
+
         }
 
         .button {
@@ -129,7 +193,7 @@
         }
 
         .top-bar-hover {
-            position: sticky;
+            position: fixed;
             display: flex;
             top: 0;
             left: 0;
@@ -162,13 +226,17 @@
                 <span id="zoom-status" class="info">100%</span>
             </div>
             <div class="right">
-                <span id="text-length" class="info">{{ content_size|format_size }}</span>
+                <span id="text-length" class="info" style="user-select: text;">{{ content_size|format_size }}</span>
                 <a href="./raw/{{ item.id }}" class="button">[raw]</a>
             </div>
         </div>
     </div>
-    <div style="display: flex; flex-direction: row; justify-content: center;">
-        <pre id="text-content" class="wrap-off">{{ content }}</pre>
+    <div id="text-container" class="wrap-off">
+        <div id="text-container-inner">
+            <pre id="text-content">{{ content }}</pre>
+            <hr>
+            <div id="bottom-pad"></div>
+        </div>
     </div>
 
     <script>
@@ -223,12 +291,13 @@
             const button = document.getElementById('wordwrap-toggle');
             const root = document.documentElement;
             const pre = document.getElementById('text-content');
+            const container = document.getElementById('text-container');
 
             function checkWidth(){
                 if(pre.scrollWidth > window.innerWidth){
-                    pre.classList.add('page-wide');
+                    container.classList.add('page-wide');
                 }else{
-                    pre.classList.remove('page-wide');
+                    container.classList.remove('page-wide');
                 }
             }
 
@@ -253,8 +322,8 @@
                     WrapButtonText[WrapMode.OFF] =  '[wrap: off ]'
                 }
                 currentWrapMode = wrapMode;
-                WrapOrder.forEach(mode => pre.classList.remove('wrap-' + mode));
-                pre.classList.add('wrap-' + wrapMode);
+                WrapOrder.forEach(mode => container.classList.remove('wrap-' + mode));
+                container.classList.add('wrap-' + wrapMode);
                 button.innerText = WrapButtonText[wrapMode];
                 try { localStorage.setItem('wordWrap', wrapMode); } catch(e){}
             }
@@ -320,7 +389,7 @@
                 let lastScrollTop = 0;
                 const SCROLL_THRESHOLD = 10;
 
-                window.addEventListener('scroll', throttleTrailing(() => {
+                document.addEventListener('scroll', throttleTrailing(() => {
                     const scrollTop = window.scrollY || document.documentElement.scrollTop;
                     const diff = scrollTop - lastScrollTop;
 
