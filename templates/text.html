@@ -21,16 +21,17 @@
     
     <style>
         :root {
+            color-scheme: light dark;
+            --bg: light-dark(#f0f0f0, #1a1a1a);
+            --text: light-dark(#000, #eee);
             --text-zoom: 1;
-            --bg-col-dark: #1a1a1a;
-            --text-col-dark: #eee;
         }
 
         body {
             font-family: "Sometype Mono", monospace;
             font-size: 0.9em;
-            background: var(--bg-col-dark);
-            color: var(--text-col-dark);
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
         }
 
@@ -40,31 +41,31 @@
             margin: 0;
             font-size: calc(1em * var(--text-zoom));
             scrollbar-width: thin;
-            scrollbar-color: #555 var(--bg-col-dark);
+            scrollbar-color: #555 var(--bg);
             padding-top: 6px;
             padding-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom));
             padding-left: 6px;
             padding-right: 6px;
-        }
 
-        .wrap-full pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-width: 100%;
-        }
+            &.wrap-full {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                max-width: 100%;
+            }
 
-        .wrap-comfortable pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-width: 800px;
-        }
+            &.wrap-comfortable {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                max-width: 800px;
+            }
 
-        .wrap-disabled pre {
-            white-space: pre;
-            overflow-x: auto;
+            &.wrap-off {
+                white-space: pre;
+                overflow-x: auto;
 
-            &.page-wide {
-                padding-right: calc(6px + 10rem);
+                &.page-wide {
+                    padding-right: calc(6px + 10rem);
+                }
             }
         }
 
@@ -72,19 +73,15 @@
             cursor: pointer;
             user-select: none;
             white-space: nowrap;
+
+            &:hover {
+                background-color: #ffffff36;
+            }
         }
 
         a.button {
             color: inherit;
             text-decoration: none;
-        }
-
-        .button:hover {
-            background-color: #ffffff36;
-        }
-
-        .top-bar.hidden {
-            transform: translateY(-100%);
         }
 
         .top-bar {
@@ -104,8 +101,11 @@
             flex-wrap: wrap;
             transition: transform 0.2s ease;
             z-index: 100;
-            background-color: var(--bg-col-dark);
+            background-color: var(--bg);
 
+            &.hidden {
+                transform: translateY(-100%);
+            }
             .info {
                 color: #9a9a9a;
                 font-size: 0.9em;
@@ -135,11 +135,12 @@
             right: 0;
             z-index: 99;
         }
-        .hover-extra {
+        #hover-extra {
             position: absolute;
             height: 100px;
             left: 0;
             right: 0;
+            pointer-events: none;
         }
 
         @media (hover: hover) {
@@ -171,7 +172,7 @@
                 <a href="./raw/{{ item.id }}" class="button">[raw]</a>
             </div>
         </div>
-        <div class="hover-extra">
+        <div id="hover-extra">
 
         </div>
     </div>
@@ -181,10 +182,20 @@
 
     <script>
         (function(){
+            const WrapMode = Object.freeze({
+                FULL: 'full',
+                COMFORTABLE: 'comfortable',
+                OFF: 'off'
+            });
+            const WrapOrder = [WrapMode.FULL, WrapMode.COMFORTABLE, WrapMode.OFF];
+            const WrapButtonText = {
+                [WrapMode.FULL]: '[wrap: full]',
+                [WrapMode.COMFORTABLE]: '[wrap:comfy]',
+                [WrapMode.OFF]: '[wrap: off ]'
+            };
+            var currentWrapMode = WrapMode.COMFORTABLE;
+
             const button = document.getElementById('wordwrap-toggle');
-            const zoomInEl = document.getElementById('zoom-in');
-            const zoomOutEl = document.getElementById('zoom-out');
-            const zoomStatus = document.getElementById('zoom-status');
             const root = document.documentElement;
             const pre = document.getElementById('text-content');
 
@@ -195,6 +206,42 @@
                     pre.classList.remove('page-wide');
                 }
             }
+
+            function cycleWrapMode(){
+                const currentIndex = WrapOrder.indexOf(currentWrapMode);
+                const nextIndex = (currentIndex + 1) % WrapOrder.length;
+                currentWrapMode = WrapOrder[nextIndex];
+                setWrapMode(currentWrapMode);
+            }
+
+            function setWrapMode(wrapMode){
+                currentWrapMode = wrapMode;
+                WrapOrder.forEach(mode => pre.classList.remove('wrap-' + mode));
+                pre.classList.add('wrap-' + wrapMode);
+                button.innerText = WrapButtonText[wrapMode];
+                try { localStorage.setItem('wordWrap', wrapMode); } catch(e){}
+            }
+
+            try {
+                const storedWrap = localStorage.getItem('wordWrap');
+                let mode = storedWrap ? storedWrap : WrapMode.COMFORTABLE;
+                if(!WrapOrder.includes(mode)) mode = WrapMode.COMFORTABLE;
+                setWrapMode(mode);
+            } catch (e) {
+                setWrapMode(WrapMode.COMFORTABLE);
+            }
+
+            button.addEventListener('click', function(){
+                cycleWrapMode();
+                checkWidth();
+            });
+
+            checkWidth();
+            window.addEventListener('resize', checkWidth);
+
+            const zoomInEl = document.getElementById('zoom-in');
+            const zoomOutEl = document.getElementById('zoom-out');
+            const zoomStatus = document.getElementById('zoom-status');
 
             const ZOOM_KEY = 'textZoom';
             const ZOOM_STEP = 0.1;
@@ -208,54 +255,12 @@
                 try{ localStorage.setItem(ZOOM_KEY, String(clamped)); }catch(e){}
             }
 
-            function applyState(mode){
-                root.classList.remove('wrap-full', 'wrap-comfortable', 'wrap-disabled');
-                if(mode === 'full'){
-                    root.classList.add('wrap-full');
-                    button.innerText = '[wrap: full]';
-                }else if(mode === 'comfortable'){
-                    root.classList.add('wrap-comfortable');
-                    button.innerText = '[wrap:comfy]';
-                }else{
-                    root.classList.add('wrap-disabled');
-                    button.innerText = '[wrap: off ]';
-                }
-                button.setAttribute('aria-pressed', mode !== 'off' ? 'true' : 'false');
-            }
-
-            function getNextMode(current){
-                if(current === 'full') return 'comfortable';
-                if(current === 'comfortable') return 'off';
-                return 'full';
-            }
-
-            const MODES = ['full', 'comfortable', 'off'];
-
-            // Read stored preferences
-            try {
-                const storedWrap = localStorage.getItem('wordWrap');
-                let mode = storedWrap ? storedWrap : 'full';
-                if(!MODES.includes(mode)) mode = 'full';
-                applyState(mode);
-            } catch (e) {
-                applyState('full');
-            }
-
             // Zoom: read stored zoom or default to 1
             try{
                 const storedZoom = parseFloat(localStorage.getItem(ZOOM_KEY));
                 setZoom(isNaN(storedZoom) ? 1 : storedZoom);
             }catch(e){ setZoom(1); }
 
-            button.addEventListener('click', function(){
-                let currentMode = 'full';
-                if(root.classList.contains('wrap-comfortable')) currentMode = 'comfortable';
-                else if(root.classList.contains('wrap-disabled')) currentMode = 'off';
-                const newMode = getNextMode(currentMode);
-                applyState(newMode);
-                try { localStorage.setItem('wordWrap', newMode); } catch(e){}
-                checkWidth();
-            });
 
             if(zoomInEl){
                 zoomInEl.addEventListener('click', function(){
@@ -291,9 +296,6 @@
                 }, { passive: true });
             })();
 
-            // Add page-wide class when pre overflows
-            checkWidth();
-            window.addEventListener('resize', checkWidth);
         })();
     </script>
 </body>
