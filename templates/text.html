@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="robots" content="noindex">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="dark light">
     <meta name="theme-color" content="#1a1a1a">
     <meta property="og:site_name" content="BorkedBin">
     <meta property="og:title" content="{{ item.title if item.title else item.id }}">
@@ -22,8 +22,8 @@
     <style>
         :root {
             color-scheme: light dark;
-            --bg: light-dark(#f0f0f0, #1a1a1a);
-            --text: light-dark(#000, #eee);
+            --bg: light-dark(#fff, #111);
+            --text: light-dark(#000, #ddd);
             --text-zoom: 1;
         }
 
@@ -41,7 +41,7 @@
             margin: 0;
             font-size: calc(1em * var(--text-zoom));
             scrollbar-width: thin;
-            scrollbar-color: #555 var(--bg);
+            scrollbar-color: rgb(from var(--text) r g b / 0.25) var(--bg);
             padding-top: 6px;
             padding-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom));
             padding-left: 6px;
@@ -73,9 +73,10 @@
             cursor: pointer;
             user-select: none;
             white-space: nowrap;
+            white-space-collapse: preserve;
 
             &:hover {
-                background-color: #ffffff36;
+                background-color: rgb(from var(--text) r g b / 0.15);
             }
         }
 
@@ -88,7 +89,7 @@
             position: relative;
             width: calc(100% - 12px);
             top: 0;
-            border-bottom: 1px solid #373737; 
+            border-bottom: 1px solid rgb(from var(--text) r g b / 0.15); 
             padding-top: 2px;
             padding-bottom: 4px; 
             padding-left: 6px;
@@ -104,10 +105,10 @@
             background-color: var(--bg);
 
             &.hidden {
-                transform: translateY(-100%);
+                transform: translateY(calc(-100% - 1px));
             }
             .info {
-                color: #9a9a9a;
+                color: rgb(from var(--text) r g b / 0.5);
                 font-size: 0.9em;
             }
             .left {
@@ -135,16 +136,9 @@
             right: 0;
             z-index: 99;
         }
-        #hover-extra {
-            position: absolute;
-            height: 100px;
-            left: 0;
-            right: 0;
-            pointer-events: none;
-        }
 
         @media (hover: hover) {
-            .top-bar-hover:hover .top-bar {
+            .top-bar-hover.extra-hovered .top-bar {
                 transform: translateY(0);
             }
         }
@@ -172,22 +166,53 @@
                 <a href="./raw/{{ item.id }}" class="button">[raw]</a>
             </div>
         </div>
-        <div id="hover-extra">
-
-        </div>
     </div>
     <div style="display: flex; flex-direction: row; justify-content: center;">
-        <pre id="text-content">{{ content }}</pre>
+        <pre id="text-content" class="wrap-off">{{ content }}</pre>
     </div>
 
     <script>
         (function(){
+
+            function throttleTrailing(fn, limit) {
+                let lastCall = 0;
+                let timeoutId = null;
+                let lastArgs = null;
+                let lastThis = null;
+
+                return function (...args) {
+                    const now = performance.now();
+                    lastArgs = args;
+                    lastThis = this;
+
+                    if (!timeoutId) {
+                        if (now - lastCall >= limit) {
+                            // If enough time has passed, execute immediately
+                            execute();
+                        } else {
+                            // Otherwise, set a timeout to execute later
+                            timeoutId = setTimeout(execute, limit - (now - lastCall));
+                        }
+                    }
+                };
+
+                function execute() {
+                    lastCall = performance.now();
+                    timeoutId = null;
+                    if (lastArgs !== null) {
+                        fn.apply(lastThis, lastArgs);
+                        lastArgs = null;
+                        lastThis = null;
+                    }
+                }
+            }
+
             const WrapMode = Object.freeze({
                 FULL: 'full',
                 COMFORTABLE: 'comfortable',
                 OFF: 'off'
             });
-            const WrapOrder = [WrapMode.FULL, WrapMode.COMFORTABLE, WrapMode.OFF];
+            const WrapOrder = [WrapMode.COMFORTABLE, WrapMode.FULL, WrapMode.OFF];
             const WrapButtonText = {
                 [WrapMode.FULL]: '[wrap: full]',
                 [WrapMode.COMFORTABLE]: '[wrap:comfy]',
@@ -214,7 +239,19 @@
                 setWrapMode(currentWrapMode);
             }
 
+            const COMFORTABLE_MAX_WIDTH = 875;
             function setWrapMode(wrapMode){
+                if (wrapMode == WrapMode.COMFORTABLE && window.screen.width < COMFORTABLE_MAX_WIDTH) {
+                    cycleWrapMode();
+                    return;
+                }
+                if (window.screen.width < COMFORTABLE_MAX_WIDTH) {
+                    WrapButtonText[WrapMode.FULL] = '[wrap:on ]'
+                    WrapButtonText[WrapMode.OFF] =  '[wrap:off]'
+                } else {
+                    WrapButtonText[WrapMode.FULL] = '[wrap: full]'
+                    WrapButtonText[WrapMode.OFF] =  '[wrap: off ]'
+                }
                 currentWrapMode = wrapMode;
                 WrapOrder.forEach(mode => pre.classList.remove('wrap-' + mode));
                 pre.classList.add('wrap-' + wrapMode);
@@ -236,8 +273,10 @@
                 checkWidth();
             });
 
-            checkWidth();
-            window.addEventListener('resize', checkWidth);
+            window.addEventListener('resize', () => {
+                setWrapMode(currentWrapMode);
+                checkWidth();
+            });
 
             const zoomInEl = document.getElementById('zoom-in');
             const zoomOutEl = document.getElementById('zoom-out');
@@ -281,7 +320,7 @@
                 let lastScrollTop = 0;
                 const SCROLL_THRESHOLD = 10;
 
-                window.addEventListener('scroll', function(){
+                window.addEventListener('scroll', throttleTrailing(() => {
                     const scrollTop = window.scrollY || document.documentElement.scrollTop;
                     const diff = scrollTop - lastScrollTop;
 
@@ -293,9 +332,29 @@
                         }
                         lastScrollTop = scrollTop;
                     }
-                }, { passive: true });
+                }, 100), { passive: true });
             })();
 
+            // Show top bar when hovering near top of screen
+            (function(){
+                const topBarHover = document.querySelector('.top-bar-hover');
+                const THRESHOLD = 100;
+
+                document.addEventListener('mousemove', throttleTrailing((e) => {
+                    if(e.clientY <= THRESHOLD){
+                        topBarHover.classList.add('extra-hovered');
+                    }else{
+                        topBarHover.classList.remove('extra-hovered');
+                    }
+                }, 100));
+            })();
+
+            document.addEventListener('DOMContentLoaded', () => {
+                checkWidth();
+                setTimeout(() => {
+                    checkWidth();
+                }, 500);
+            });
         })();
     </script>
 </body>
