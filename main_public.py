@@ -100,7 +100,18 @@ ensure_uploads_dir()
 
 app = FastAPI(title="BorkedBin - Public")
 
+
+def format_size(size: int) -> str:
+    size_float = float(size)
+    for unit in ["B", "KiB", "MiB", "GiB"]:
+        if size_float < 1024:
+            return f"{size_float:.1f} {unit}"
+        size_float /= 1024
+    return f"{size_float:.1f} TB"
+
+
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["format_size"] = format_size
 
 
 @app.exception_handler(404)
@@ -374,9 +385,15 @@ async def get_item(
 
     if item.content_text is not None:
         if item.type == "text":
+            content_size = len(item.content_text.encode("utf-8"))
             return templates.TemplateResponse(
                 "text.html",
-                {"request": request, "content": item.content_text, "item": item},
+                {
+                    "request": request,
+                    "content": item.content_text,
+                    "item": item,
+                    "content_size": content_size,
+                },
                 headers=cache_headers,
             )
 
