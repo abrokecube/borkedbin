@@ -115,7 +115,7 @@
 
             &.wrap-off.page-wide #text-content {
                 border-right: 1px solid rgb(from var(--text) r g b / 0.15);
-                margin-right: calc(6px + 10rem);
+                margin-right: calc(6px + 50vw);
             }
 
             hr {
@@ -361,6 +361,7 @@
                 root.style.setProperty('--text-zoom', String(clamped));
                 if(zoomStatus) zoomStatus.textContent = Math.round(clamped*100) + '%';
                 try{ localStorage.setItem(ZOOM_KEY, String(clamped)); }catch(e){}
+                checkWidth();
             }
 
             // Zoom: read stored zoom or default to 1
