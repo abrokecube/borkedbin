@@ -27,8 +27,36 @@
             --text-zoom: 1;
         }
 
+        @font-face {
+            font-family: 'Sometype Consolas fallback';
+            src: local('Consolas');
+            size-adjust: 105.5%;
+            ascent-override: 87.7%;
+            descent-override: normal;
+            line-gap-override: normal;
+        }
+
+        @font-face {
+            font-family: 'Sometype Courier New fallback';
+            src: local('Courier New');
+            size-adjust: 96.8%;
+            ascent-override: 93%;
+            descent-override: normal;
+            line-gap-override: normal;
+        }
+
+        @font-face {
+            font-family: 'Sometype Droid Sans Mono fallback';
+            src: local('Droid Sans Mono');
+            size-adjust: 96.7%;
+            ascent-override: normal;
+            descent-override: normal;
+            line-gap-override: normal;
+        }
+
         body {
-            font-family: "Sometype Mono", monospace;
+            font-family: "Sometype Mono", 'Sometype Consolas fallback', 'Sometype Courier New fallback', 'Sometype Droid Sans Mono fallback', monospace;
+            font-display: block;
             font-size: 0.9em;
             background: var(--bg);
             color: var(--text);
@@ -63,7 +91,8 @@
         }
 
         #text-content {
-            font-family: "Sometype Mono", monospace;
+            font-family: inherit;
+            font-display: block;
             line-height: 1.4;
             margin: auto;
             font-size: calc(1em * var(--text-zoom));
