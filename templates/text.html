@@ -2,11 +2,13 @@
 <html>
 
 <head>
+    <meta name="robots" content="noindex,noarchive,nofollow" />
     <title>{{ item.title if item.title else item.id }}</title>
     <link rel="icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="robots" content="noindex">
     <meta name="color-scheme" content="dark light">
@@ -15,10 +17,10 @@
     <meta property="og:title" content="{{ item.title if item.title else item.id }}">
     {% set snippet = content.split('\n',1)[0] %}
     {% if snippet|length > 200 %}{% set snippet = snippet[:199] + '…' %}{% endif %}
-    <meta property="og:description" content="Text • {{ content_size|format_size }}{% if snippet %} • {{ snippet }}{% endif %}">
+    <meta property="og:description"
+        content="Text • {{ content_size|format_size }}{% if snippet %} • {{ snippet }}{% endif %}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:type" content="website">
-    
     <style>
         :root {
             color-scheme: light dark;
@@ -64,9 +66,8 @@
             display: flex;
             flex-direction: column;
             scrollbar-width: thin;
-            scrollbar-color: 
-                rgb(from var(--text) r g b / 0.25) 
-                rgb(from var(--bg) r g b / 0.25);
+            scrollbar-color:
+                rgb(from var(--text) r g b / 0.25) rgb(from var(--bg) r g b / 0.25);
         }
 
         ::-webkit-scrollbar {
@@ -98,7 +99,7 @@
             font-size: calc(1em * var(--text-zoom));
             padding: 6px;
             width: fit-content;
-            position: relative;    
+            position: relative;
             padding-top: calc(6px + 6px + 1rem);
 
         }
@@ -107,9 +108,8 @@
             padding: 0px;
             margin: 0px;
             scrollbar-width: thin;
-            scrollbar-color: 
-                rgb(from var(--text) r g b / 0.25) 
-                rgb(from var(--bg) r g b / 0.25);
+            scrollbar-color:
+                rgb(from var(--text) r g b / 0.25) rgb(from var(--bg) r g b / 0.25);
             overflow: none;
             flex-grow: 1;
             gap: 0;
@@ -182,13 +182,13 @@
             position: relative;
             width: calc(100% - 12px);
             top: 0;
-            border-bottom: 1px solid rgb(from var(--text) r g b / 0.15); 
+            border-bottom: 1px solid rgb(from var(--text) r g b / 0.15);
             padding-top: 2px;
-            padding-bottom: 4px; 
+            padding-bottom: 4px;
             padding-left: 6px;
             padding-right: 6px;
-            display: flex; 
-            align-items: center; 
+            display: flex;
+            align-items: center;
             background-color: inherit;
             user-select: none;
             white-space: nowrap;
@@ -200,16 +200,19 @@
             &.hidden {
                 transform: translateY(calc(-100% - 1px));
             }
+
             .info {
                 color: rgb(from var(--text) r g b / 0.5);
                 font-size: 0.9em;
             }
+
             .left {
                 display: flex;
                 align-items: baseline;
                 gap: 6px;
                 flex-wrap: wrap;
             }
+
             .right {
                 display: flex;
                 flex-grow: 1;
@@ -241,7 +244,6 @@
                 transform: translateY(-100%);
             }
         }
-
     </style>
 </head>
 
@@ -269,7 +271,7 @@
     </div>
 
     <script>
-        (function(){
+        (function () {
 
             function throttleTrailing(fn, limit) {
                 let lastCall = 0;
@@ -322,15 +324,15 @@
             const pre = document.getElementById('text-content');
             const container = document.getElementById('text-container');
 
-            function checkWidth(){
-                if(pre.scrollWidth > window.innerWidth){
+            function checkWidth() {
+                if (pre.scrollWidth > window.innerWidth) {
                     container.classList.add('page-wide');
-                }else{
+                } else {
                     container.classList.remove('page-wide');
                 }
             }
 
-            function cycleWrapMode(){
+            function cycleWrapMode() {
                 const currentIndex = WrapOrder.indexOf(currentWrapMode);
                 const nextIndex = (currentIndex + 1) % WrapOrder.length;
                 currentWrapMode = WrapOrder[nextIndex];
@@ -338,35 +340,35 @@
             }
 
             const COMFORTABLE_MAX_WIDTH = 875;
-            function setWrapMode(wrapMode){
+            function setWrapMode(wrapMode) {
                 if (wrapMode == WrapMode.COMFORTABLE && window.screen.width < COMFORTABLE_MAX_WIDTH) {
                     cycleWrapMode();
                     return;
                 }
                 if (window.screen.width < COMFORTABLE_MAX_WIDTH) {
                     WrapButtonText[WrapMode.FULL] = '[wrap:on ]'
-                    WrapButtonText[WrapMode.OFF] =  '[wrap:off]'
+                    WrapButtonText[WrapMode.OFF] = '[wrap:off]'
                 } else {
                     WrapButtonText[WrapMode.FULL] = '[wrap: full]'
-                    WrapButtonText[WrapMode.OFF] =  '[wrap: off ]'
+                    WrapButtonText[WrapMode.OFF] = '[wrap: off ]'
                 }
                 currentWrapMode = wrapMode;
                 WrapOrder.forEach(mode => container.classList.remove('wrap-' + mode));
                 container.classList.add('wrap-' + wrapMode);
                 button.innerText = WrapButtonText[wrapMode];
-                try { localStorage.setItem('wordWrap', wrapMode); } catch(e){}
+                try { localStorage.setItem('wordWrap', wrapMode); } catch (e) { }
             }
 
             try {
                 const storedWrap = localStorage.getItem('wordWrap');
                 let mode = storedWrap ? storedWrap : WrapMode.COMFORTABLE;
-                if(!WrapOrder.includes(mode)) mode = WrapMode.COMFORTABLE;
+                if (!WrapOrder.includes(mode)) mode = WrapMode.COMFORTABLE;
                 setWrapMode(mode);
             } catch (e) {
                 setWrapMode(WrapMode.COMFORTABLE);
             }
 
-            button.addEventListener('click', function(){
+            button.addEventListener('click', function () {
                 cycleWrapMode();
                 checkWidth();
             });
@@ -385,36 +387,36 @@
             const ZOOM_MIN = 0.5;
             const ZOOM_MAX = 3.0;
 
-            function setZoom(z){
+            function setZoom(z) {
                 const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
                 root.style.setProperty('--text-zoom', String(clamped));
-                if(zoomStatus) zoomStatus.textContent = Math.round(clamped*100) + '%';
-                try{ localStorage.setItem(ZOOM_KEY, String(clamped)); }catch(e){}
+                if (zoomStatus) zoomStatus.textContent = Math.round(clamped * 100) + '%';
+                try { localStorage.setItem(ZOOM_KEY, String(clamped)); } catch (e) { }
                 checkWidth();
             }
 
             // Zoom: read stored zoom or default to 1
-            try{
+            try {
                 const storedZoom = parseFloat(localStorage.getItem(ZOOM_KEY));
                 setZoom(isNaN(storedZoom) ? 1 : storedZoom);
-            }catch(e){ setZoom(1); }
+            } catch (e) { setZoom(1); }
 
 
-            if(zoomInEl){
-                zoomInEl.addEventListener('click', function(){
+            if (zoomInEl) {
+                zoomInEl.addEventListener('click', function () {
                     const current = parseFloat(getComputedStyle(root).getPropertyValue('--text-zoom')) || 1;
                     setZoom(current + ZOOM_STEP);
                 });
             }
-            if(zoomOutEl){
-                zoomOutEl.addEventListener('click', function(){
+            if (zoomOutEl) {
+                zoomOutEl.addEventListener('click', function () {
                     const current = parseFloat(getComputedStyle(root).getPropertyValue('--text-zoom')) || 1;
                     setZoom(current - ZOOM_STEP);
                 });
             }
 
             // Hide/show top bar on scroll
-            (function(){
+            (function () {
                 const topBar = document.querySelector('.top-bar');
                 let lastScrollTop = 0;
                 const SCROLL_THRESHOLD = 10;
@@ -423,10 +425,10 @@
                     const scrollTop = window.scrollY || document.documentElement.scrollTop;
                     const diff = scrollTop - lastScrollTop;
 
-                    if(Math.abs(diff) >= SCROLL_THRESHOLD){
-                        if(diff > 0){
+                    if (Math.abs(diff) >= SCROLL_THRESHOLD) {
+                        if (diff > 0) {
                             topBar.classList.add('hidden');
-                        }else{
+                        } else {
                             topBar.classList.remove('hidden');
                         }
                         lastScrollTop = scrollTop;
@@ -435,14 +437,14 @@
             })();
 
             // Show top bar when hovering near top of screen
-            (function(){
+            (function () {
                 const topBarHover = document.querySelector('.top-bar-hover');
                 const THRESHOLD = 100;
 
                 document.addEventListener('mousemove', throttleTrailing((e) => {
-                    if(e.clientY <= THRESHOLD){
+                    if (e.clientY <= THRESHOLD) {
                         topBarHover.classList.add('extra-hovered');
-                    }else{
+                    } else {
                         topBarHover.classList.remove('extra-hovered');
                     }
                 }, 100));

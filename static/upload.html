@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta name="robots" content="noindex,noarchive,nofollow" />
     <title>BorkedBin</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
@@ -22,7 +23,7 @@
 
         input[type="text"],
         input[type="password"],
-        textarea, 
+        textarea,
         select {
             width: 100%;
             box-sizing: border-box;
@@ -92,7 +93,7 @@
 
 <body>
     <div class="container">
-        <div class="card" >
+        <div class="card">
             <div class="form-group" style="margin-bottom: 0;">
                 <label for="apiKey">API Key</label>
                 <input type="password" id="apiKey" placeholder="Enter your API Key to create content">
@@ -276,7 +277,7 @@
                     }
                     const permData = await permResponse.json();
                     const allowedTypes = permData.allowed_types;
-    
+
                     if (!allowedTypes.includes('*')) {
                         let intendedType = '';
                         if (endpoint.includes('/add/text')) intendedType = 'text';
@@ -293,7 +294,7 @@
                                 else intendedType = 'file';
                             }
                         }
-    
+
                         if (intendedType && !allowedTypes.includes(intendedType)) {
                             showResult(`Your API key does not have permission to upload '${intendedType}' content.`, false);
                             submitBtn.innerText = originalBtnText;
@@ -332,20 +333,20 @@
                     body = formData;
                 } else {
                     const jsonBody = {};
-                    
+
                     if (endpoint.includes('/add/text') || endpoint.includes('/add/markdown')) {
                         jsonBody.content = formData.get('content');
                     } else if (endpoint.includes('/add/url')) {
                         jsonBody.url = formData.get('url');
                     }
-                    
+
                     if (expiresIn) {
                         jsonBody.expires_in = parseInt(expiresIn);
                     }
                     if (contentTitle) {
                         jsonBody.title = contentTitle;
                     }
-                    
+
                     headers['Content-Type'] = 'application/json';
                     body = JSON.stringify(jsonBody);
                 }
