@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap');
+
+:root {
+    color-scheme: light dark;
+    --bg: light-dark(#fff, #111);
+    --text: light-dark(#000, #ddd);
+    --muted: light-dark(rgb(0 0 0 / 0.55), rgb(221 221 221 / 0.55));
+    --line: light-dark(rgb(0 0 0 / 0.15), rgb(221 221 221 / 0.15));
+    --hover: light-dark(rgb(0 0 0 / 0.1), rgb(221 221 221 / 0.15));
+    --field-bg: light-dark(rgb(0 0 0 / 0.035), rgb(255 255 255 / 0.04));
+    --focus: light-dark(#005fcc, #8bbcff);
+    --success: light-dark(#176b36, #83c995);
+    --success-bg: light-dark(#e8f6ed, #172a1d);
+    --error: light-dark(#a4262c, #e4a0a5);
+    --error-bg: light-dark(#fceced, #321b1d);
+    --text-zoom: 1;
+}
+
+@font-face {
+    font-family: 'Sometype Consolas fallback';
+    src: local('Consolas');
+    size-adjust: 105.5%;
+    ascent-override: 87.7%;
+    descent-override: normal;
+    line-gap-override: normal;
+}
+
+@font-face {
+    font-family: 'Sometype Courier New fallback';
+    src: local('Courier New');
+    size-adjust: 96.8%;
+    ascent-override: 93%;
+    descent-override: normal;
+    line-gap-override: normal;
+}
+
+@font-face {
+    font-family: 'Sometype Droid Sans Mono fallback';
+    src: local('Droid Sans Mono');
+    size-adjust: 96.7%;
+    ascent-override: normal;
+    descent-override: normal;
+    line-gap-override: normal;
+}
+
+html {
+    background: var(--bg);
+    color: var(--text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: "Sometype Mono", 'Sometype Consolas fallback', 'Sometype Courier New fallback', 'Sometype Droid Sans Mono fallback', monospace;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9em;
+    line-height: 1.4;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text);
+}
+
+a {
+    color: inherit;
+}
+
+.button,
+.btn {
+    display: inline-block;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.button:hover,
+.btn:hover {
+    background: var(--hover);
+}
+
+.button:disabled,
+.btn:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+:focus-visible {
+    outline: 1px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.info,
+.muted {
+    color: var(--muted);
+    font-size: 0.9em;
+}
+
+.top-bar-hover {
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.top-bar {
+    position: relative;
+    top: 0;
+    display: flex;
+    width: calc(100% - 12px);
+    padding: 2px 6px 4px;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+    flex-wrap: wrap;
+    background: var(--bg);
+    user-select: none;
+    white-space: nowrap;
+    transition: transform 0.2s ease;
+}
+
+.top-bar.hidden {
+    transform: translateY(calc(-100% - 1px));
+}
+
+.top-bar .left,
+.top-bar .right {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.top-bar .right {
+    flex-grow: 1;
+    justify-content: flex-end;
+    margin-left: 8px;
+}
+
+.top-bar-hover.extra-hovered .top-bar {
+    transform: translateY(0);
+}
+
+.simple-page {
+    width: min(800px, calc(100% - 24px));
+    margin: 0 auto;
+    padding: calc(1.5rem + 12px) 0 2rem;
+}
+
+.simple-page h1,
+.simple-page h2,
+.simple-page p {
+    margin-top: 0;
+}
+
+.simple-page h1,
+.simple-page h2 {
+    margin-bottom: 0.4rem;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+hr {
+    border: 0;
+    border-bottom: 1px solid var(--line);
+}
+
+@media (hover: none) {
+    .top-bar.hidden {
+        transform: translateY(-100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .top-bar {
+        transition: none;
+    }
+}

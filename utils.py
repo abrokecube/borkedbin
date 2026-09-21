@@ -1,7 +1,11 @@
-import random
+import secrets
 import string
 import os
+from typing import Callable
 from urllib.parse import urlparse
+
+# Alphanumeric alphabet used for IDs, keys and secrets.
+ID_ALPHABET = string.ascii_letters + string.digits
 
 
 def is_valid_url(url: str) -> bool:
@@ -27,9 +31,24 @@ def is_valid_url(url: str) -> bool:
     return True
 
 def generate_short_id(length=8):
-    """Generate a random alphanumeric short ID."""
-    chars = string.ascii_letters + string.digits
-    return ''.join(random.choices(chars, k=length))
+    """Generate a cryptographically secure random alphanumeric short ID."""
+    return "".join(secrets.choice(ID_ALPHABET) for _ in range(length))
+
+
+def generate_unique_short_id(is_taken: Callable[[str], bool], length=8, max_attempts=10):
+    """Generate a short ID that ``is_taken`` does not already report as used.
+
+    ``is_taken`` receives a candidate ID and returns True when it is already
+    present in the destination store, so the caller can verify uniqueness before
+    writing anything. Raises RuntimeError if no free ID is found.
+    """
+    for _ in range(max_attempts):
+        candidate = generate_short_id(length)
+        if not is_taken(candidate):
+            return candidate
+    raise RuntimeError(
+        f"Could not generate a unique {length}-character ID in {max_attempts} attempts"
+    )
 
 def ensure_uploads_dir():
     """Ensure that the uploads directory exists."""

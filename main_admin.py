@@ -8,7 +8,7 @@ from sqlalchemy import desc
 from typing import List
 
 from database import ContentItem, ApiKey, get_session
-from utils import generate_short_id
+from utils import generate_unique_short_id
 from config import settings
 
 app = FastAPI(title="BorkedBin - Admin")
@@ -29,7 +29,7 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
     total_keys = len(keys)
     active_keys = sum(1 for k in keys if k.is_active)
     
-    response = templates.TemplateResponse("admin.html", {
+    response = templates.TemplateResponse(request, "admin.html", {
         "request": request,
         "items": items,
         "keys": keys,
@@ -46,6 +46,13 @@ async def admin_dashboard(request: Request, session: Session = Depends(get_sessi
 @app.get("/styles.css", include_in_schema=False)
 async def get_styles_css():
     return FileResponse("static/admin_styles.css", headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/theme.css", include_in_schema=False)
+async def get_theme_css():
+    return FileResponse(
+        "static/theme.css", headers={"Cache-Control": "public, max-age=3600"}
+    )
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon():
@@ -70,6 +77,10 @@ async def delete_item(item_id: str, session: Session = Depends(get_session)):
     session.commit()
     return RedirectResponse(url="/", status_code=303)
 
+def _api_key_exists(session: Session, candidate: str) -> bool:
+    return session.exec(select(ApiKey).where(ApiKey.key == candidate)).first() is not None
+
+
 @app.post("/keys/create")
 async def create_key(
     name: str = Form(...), 
@@ -77,7 +88,7 @@ async def create_key(
     allowed_types_list: List[str] = Form(default=[]),
     session: Session = Depends(get_session)
 ):
-    new_key = generate_short_id(32) # longer for API keys
+    new_key = generate_unique_short_id(lambda candidate: _api_key_exists(session, candidate), 32)  # longer for API keys
     allowed_types_str = "*" if allow_all else ",".join(allowed_types_list)
     key_record = ApiKey(key=new_key, name=name, allowed_types=allowed_types_str)
     session.add(key_record)

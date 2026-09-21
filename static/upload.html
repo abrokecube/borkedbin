@@ -1,176 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta name="robots" content="noindex,noarchive,nofollow" />
-    <title>BorkedBin</title>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex,noarchive,nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <title>BorkedBin - Upload</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/styles.css">
-    <style>
-        .container {
-            max-width: 800px;
-            margin: auto;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-
-        input[type="text"],
-        input[type="password"],
-        textarea,
-        select {
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            height: 150px;
-            font-family: monospace;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 1em;
-            border-bottom: 1px solid #5d5d5d;
-            padding-bottom: 0px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 4px 4px 0 0;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-
-        .tab:hover {
-            background: #5d5d5d;
-        }
-
-        .tab.active {
-            border: 1px solid #5d5d5d;
-            border-bottom: none;
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        #result {
-            margin-top: 1rem;
-            padding: 8px;
-            border-radius: 4px;
-            display: none;
-            word-wrap: break-word;
-        }
-
-        .success {
-            background: #2a3c30;
-            color: #83b88f;
-            border: 1px solid #4f6955;
-        }
-
-        .error {
-            background: #442b2e;
-            color: #bd9398;
-            border: 1px solid #7f5459;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="apiKey">API Key</label>
-                <input type="password" id="apiKey" placeholder="Enter your API Key to create content">
+    <div class="top-bar-hover">
+        <div class="top-bar">
+            <div class="left">
+                <a href="/" class="button">BorkedBin</a>
             </div>
-            <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
-                <label for="contentTitle">Title (optional)</label>
+            <div class="right">
+                <span class="info">upload</span>
+            </div>
+        </div>
+    </div>
+    <main class="page-shell">
+        <section class="page-section">
+            <div class="form-group">
+                <label for="apiKey">API key</label>
+                <input type="password" id="apiKey" placeholder="Enter your API key to create content">
+            </div>
+            <div class="form-group">
+                <label for="contentTitle">Title <span class="muted">(optional)</span></label>
                 <input type="text" id="contentTitle" maxlength="80" placeholder="Give your content a title">
             </div>
-            <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+            <div class="form-group">
                 <label for="expiresIn">Expiry</label>
                 <select id="expiresIn">
                     <option value="">Never</option>
-                    <option value="60">1 Hour</option>
-                    <option value="1440">1 Day</option>
-                    <option value="10080">1 Week</option>
+                    <option value="60">1 hour</option>
+                    <option value="1440">1 day</option>
+                    <option value="10080">1 week</option>
                 </select>
             </div>
-        </div>
+        </section>
 
-        <div class="card">
-            <div class="tabs">
-                <div class="tab active" data-target="text-form">Text</div>
-                <div class="tab" data-target="markdown-form">Markdown</div>
-                <div class="tab" data-target="url-form">URL</div>
-                <div class="tab" data-target="file-form">File</div>
+        <section class="page-section">
+            <div class="tabs" role="group" aria-label="Content type">
+                <button type="button" class="tab active" data-target="text-form">[text]</button>
+                <button type="button" class="tab" data-target="markdown-form">[markdown]</button>
+                <button type="button" class="tab" data-target="url-form">[url]</button>
+                <button type="button" class="tab" data-target="file-form">[file]</button>
             </div>
 
-            <!-- Text Form -->
             <form id="text-form" class="tab-content active" onsubmit="submitForm(event, '/api/add/text')">
                 <div class="form-group">
-                    <label>Plain Text Content</label>
-                    <p>Max size: <span class="text-size-limit"></span> MB</p>
+                    <label>Plain text content</label>
+                    <p class="muted">Max size: <span class="text-size-limit"></span> MB</p>
                     <textarea name="content" required placeholder="Paste your text here..."></textarea>
                 </div>
-                <button type="submit" class="btn">Create Paste</button>
+                <button type="submit" class="btn">[create paste]</button>
             </form>
 
-            <!-- Markdown Form -->
             <form id="markdown-form" class="tab-content" onsubmit="submitForm(event, '/api/add/markdown')">
                 <div class="form-group">
-                    <label>Markdown Content</label>
-                    <p>Max size: <span class="text-size-limit"></span> MB</p>
+                    <label>Markdown content</label>
+                    <p class="muted">Max size: <span class="text-size-limit"></span> MB</p>
                     <textarea name="content" required placeholder="# Title&#10;Paste your markdown here..."></textarea>
                 </div>
-                <button type="submit" class="btn">Create Markdown</button>
+                <button type="submit" class="btn">[create markdown]</button>
             </form>
 
-            <!-- URL Form -->
             <form id="url-form" class="tab-content" onsubmit="submitForm(event, '/api/add/url')">
                 <div class="form-group">
-                    <label>URL to Redirect</label>
+                    <label>URL to redirect</label>
                     <input type="text" name="url" required placeholder="https://example.com">
                 </div>
-                <button type="submit" class="btn">Create Shortlink</button>
+                <button type="submit" class="btn">[create shortlink]</button>
             </form>
 
-            <!-- File Form -->
             <form id="file-form" class="tab-content" onsubmit="submitForm(event, '/api/add/file')">
                 <div class="form-group">
-                    <label>Upload Generic File</label>
-                    <p>Max size: <span class="file-size-limit"></span> MB</p>
+                    <label>File</label>
+                    <p class="muted">Max size: <span class="file-size-limit"></span> MB</p>
                     <input type="file" name="file" required>
                 </div>
-                <button type="submit" class="btn">Upload File</button>
+                <button type="submit" class="btn">[upload file]</button>
             </form>
 
-            <div id="result"></div>
-        </div>
-    </div>
-
+            <div id="result" role="status"></div>
+        </section>
+    </main>
     <script>
         let MAX_FILE_SIZE = 0;
         let MAX_TEXT_SIZE = 0;
         let MAX_FILE_SIZE_MB = 0;
         let MAX_TEXT_SIZE_MB = 0;
 
-        // Fetch config limits and use local storage to persist API key and Expiry
+        // Fetch upload limits for client-side feedback
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const configRes = await fetch('/api/config');
@@ -185,24 +111,6 @@
             } catch (e) {
                 console.error("Failed to fetch upload limits config", e);
             }
-
-            const savedKey = localStorage.getItem('borkedbin_api_key');
-            if (savedKey) {
-                document.getElementById('apiKey').value = savedKey;
-            }
-
-            const savedExpiry = localStorage.getItem('borkedbin_expiry');
-            if (savedExpiry) {
-                document.getElementById('expiresIn').value = savedExpiry;
-            }
-        });
-
-        document.getElementById('apiKey').addEventListener('change', (e) => {
-            localStorage.setItem('borkedbin_api_key', e.target.value);
-        });
-
-        document.getElementById('expiresIn').addEventListener('change', (e) => {
-            localStorage.setItem('borkedbin_expiry', e.target.value);
         });
 
         // Tab switching logic
