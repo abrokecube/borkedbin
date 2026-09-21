@@ -1,28 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta name="robots" content="noindex,noarchive,nofollow" />
-    <title>{{ item.title if item.title else "BorkedBin - File Download" }}</title>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex,noarchive,nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <title>{{ item.title if item.title else metadata.get("filename", item.id) }}</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/styles.css">
-    <style>
-
-    </style>
 </head>
 
 <body>
-    <h1>File</h1>
-    <p>
-        <strong>Filename:</strong> {{ metadata.get("filename", item.id) }}<br>
-        <strong>Size:</strong> {{ '{:.2f}'.format(metadata.get("size", 0) / 1024) }} KB<br>
-        {% if metadata.get("magic_mime") %}
-        <strong>Type:</strong> {{ metadata.get("magic_mime") }}<br>
-        {% endif %}
-        {% if metadata.get("magic_description") %}
-        <strong>Description:</strong> {{ metadata.get("magic_description") }}<br>
-        {% endif %}
-    </p>
-    <a href="/download/{{ item.id }}" class="btn">Download File</a>
+    <div class="top-bar-hover">
+        <div class="top-bar">
+            <div class="left item-title-wrap">
+                <span class="item-title"
+                    title="{{ item.title if item.title else metadata.get('filename', item.id) }}">
+                    {{ item.title if item.title else metadata.get("filename", item.id) }}
+                </span>
+            </div>
+            <div class="right">
+                {% if metadata.get("size") %}
+                <span class="info">{{ metadata.get("size")|format_size }}</span>
+                {% endif %}
+                <a href="/raw/{{ item.id }}" class="button">[raw]</a>
+            </div>
+        </div>
+    </div>
+    <main class="page-shell">
+        <section class="page-section">
+            <dl class="file-details">
+                <dt>filename</dt>
+                <dd>{{ metadata.get("filename", item.id) }}</dd>
+                <dt>size</dt>
+                <dd>{{ metadata.get("size", 0)|format_size }}</dd>
+                {% if metadata.get("magic_mime") %}
+                <dt>type</dt>
+                <dd>{{ metadata.get("magic_mime") }}</dd>
+                {% endif %}
+                {% if metadata.get("magic_description") %}
+                <dt>description</dt>
+                <dd>{{ metadata.get("magic_description") }}</dd>
+                {% endif %}
+            </dl>
+            <div class="actions">
+                <a href="/raw/{{ item.id }}" download="{{ metadata.get('filename', item.id) }}"
+                    class="button">[download]</a>
+            </div>
+        </section>
+    </main>
 </body>
 
 </html>

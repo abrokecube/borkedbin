@@ -5,10 +5,7 @@
     <meta name="robots" content="noindex,noarchive,nofollow" />
     <title>{{ item.title if item.title else item.id }}</title>
     <link rel="icon" href="/favicon.ico">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="/theme.css">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="robots" content="noindex">
     <meta name="color-scheme" content="dark light">
@@ -22,227 +19,76 @@
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:type" content="website">
     <style>
-        :root {
-            color-scheme: light dark;
-            --bg: light-dark(#fff, #111);
-            --text: light-dark(#000, #ddd);
-            --text-zoom: 1;
-        }
-
-        @font-face {
-            font-family: 'Sometype Consolas fallback';
-            src: local('Consolas');
-            size-adjust: 105.5%;
-            ascent-override: 87.7%;
-            descent-override: normal;
-            line-gap-override: normal;
-        }
-
-        @font-face {
-            font-family: 'Sometype Courier New fallback';
-            src: local('Courier New');
-            size-adjust: 96.8%;
-            ascent-override: 93%;
-            descent-override: normal;
-            line-gap-override: normal;
-        }
-
-        @font-face {
-            font-family: 'Sometype Droid Sans Mono fallback';
-            src: local('Droid Sans Mono');
-            size-adjust: 96.7%;
-            ascent-override: normal;
-            descent-override: normal;
-            line-gap-override: normal;
-        }
-
         body {
-            font-family: "Sometype Mono", 'Sometype Consolas fallback', 'Sometype Courier New fallback', 'Sometype Droid Sans Mono fallback', monospace;
-            font-display: block;
-            font-size: 0.9em;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
             display: flex;
             flex-direction: column;
-            scrollbar-width: thin;
-            scrollbar-color:
-                rgb(from var(--text) r g b / 0.25) rgb(from var(--bg) r g b / 0.25);
-        }
-
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgb(from var(--bg) r g b / 0.25);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgb(from var(--text) r g b / 0.25);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgb(from var(--text) r g b / 0.5);
-        }
-
-        ::-webkit-scrollbar-corner {
-            background: rgb(from var(--bg) r g b / 0.25);
         }
 
         #text-content {
-            font-family: inherit;
-            font-display: block;
-            line-height: 1.4;
-            margin: auto;
-            font-size: calc(1em * var(--text-zoom));
-            padding: 6px;
-            width: fit-content;
             position: relative;
+            width: fit-content;
+            margin: auto;
+            padding: 6px;
             padding-top: calc(6px + 6px + 1rem);
-
+            font-family: inherit;
+            font-size: calc(1em * var(--text-zoom));
+            line-height: 1.4;
         }
 
         #text-container {
-            padding: 0px;
-            margin: 0px;
-            scrollbar-width: thin;
-            scrollbar-color:
-                rgb(from var(--text) r g b / 0.25) rgb(from var(--bg) r g b / 0.25);
-            overflow: none;
             flex-grow: 1;
+            padding: 0;
+            margin: 0;
             gap: 0;
             align-items: flex-start;
+            scrollbar-width: thin;
+            scrollbar-color: var(--muted) transparent;
+        }
 
-            #text-container-inner {
-                width: max-content;
-                min-width: 100%;
-            }
+        #text-container-inner {
+            width: max-content;
+            min-width: 100%;
+        }
 
-            &.wrap-full {
-                max-width: 100%;
+        #text-container.wrap-full {
+            max-width: 100%;
+        }
 
-                #text-container-inner {
-                    max-width: 100%;
-                }
+        #text-container.wrap-full #text-container-inner {
+            max-width: 100%;
+        }
 
-                #text-content {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    max-width: 100%;
-                }
-            }
+        #text-container.wrap-full #text-content {
+            max-width: 100%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
 
-            &.wrap-comfortable {
-                #text-content {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    max-width: 800px;
-                }
-            }
+        #text-container.wrap-comfortable #text-content {
+            max-width: 800px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
 
-            &.wrap-off.page-wide #text-content {
-                border-right: 1px solid rgb(from var(--text) r g b / 0.15);
-                margin-right: calc(6px + 50vw);
-            }
+        #text-container.wrap-off.page-wide #text-content {
+            margin-right: calc(6px + 50vw);
+            border-right: 1px solid var(--line);
+        }
 
-            hr {
-                margin: 0;
-                min-width: 100%;
-                width: max-content;
-                border: none;
-                border-bottom: 1px solid rgb(from var(--text) r g b / 0.15);
-            }
+        #text-container hr {
+            width: max-content;
+            min-width: 100%;
+            margin: 0;
+            border: 0;
+            border-bottom: 1px solid var(--line);
+        }
 
-            #bottom-pad {
-                /* margin-bottom: calc(0.5rem + 100vh - 1.5rem - 3rem * var(--text-zoom)); */
-                margin-bottom: 75vh;
-            }
-
+        #bottom-pad {
+            margin-bottom: 75vh;
         }
 
         .button {
-            cursor: pointer;
-            user-select: none;
-            white-space: nowrap;
             white-space-collapse: preserve;
-
-            &:hover {
-                background-color: rgb(from var(--text) r g b / 0.15);
-            }
-        }
-
-        a.button {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .top-bar {
-            position: relative;
-            width: calc(100% - 12px);
-            top: 0;
-            border-bottom: 1px solid rgb(from var(--text) r g b / 0.15);
-            padding-top: 2px;
-            padding-bottom: 4px;
-            padding-left: 6px;
-            padding-right: 6px;
-            display: flex;
-            align-items: center;
-            background-color: inherit;
-            user-select: none;
-            white-space: nowrap;
-            flex-wrap: wrap;
-            transition: transform 0.2s ease;
-            z-index: 100;
-            background-color: var(--bg);
-
-            &.hidden {
-                transform: translateY(calc(-100% - 1px));
-            }
-
-            .info {
-                color: rgb(from var(--text) r g b / 0.5);
-                font-size: 0.9em;
-            }
-
-            .left {
-                display: flex;
-                align-items: baseline;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
-
-            .right {
-                display: flex;
-                flex-grow: 1;
-                align-items: baseline;
-                gap: 6px;
-                margin-left: 8px;
-                justify-content: flex-end;
-                flex-wrap: wrap;
-            }
-        }
-
-        .top-bar-hover {
-            position: fixed;
-            display: flex;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 99;
-        }
-
-        @media (hover: hover) {
-            .top-bar-hover.extra-hovered .top-bar {
-                transform: translateY(0);
-            }
-        }
-
-        @media (hover: none) {
-            .top-bar.hidden {
-                transform: translateY(-100%);
-            }
         }
     </style>
 </head>
@@ -258,7 +104,7 @@
             </div>
             <div class="right">
                 <span id="text-length" class="info" style="user-select: text;">{{ content_size|format_size }}</span>
-                <a href="./raw/{{ item.id }}" class="button">[raw]</a>
+                <a href="/raw/{{ item.id }}" class="button">[raw]</a>
             </div>
         </div>
     </div>
