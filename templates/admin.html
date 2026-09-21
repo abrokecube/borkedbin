@@ -1,9 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <meta name="robots" content="noindex,noarchive,nofollow" />
     <title>BorkedBin - Admin Dashboard</title>
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta property="og:site_name" content="BorkedBin">
+    <meta property="og:title" content="BorkedBin - Admin Dashboard">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 
@@ -11,7 +20,7 @@
     <div class="container">
         <div class="header">
             <h1>Admin Dashboard</h1>
-            <div>
+            <div class="info">
                 Total Items: <strong>{{ stats.total_items }}</strong> |
                 Active Keys: <strong>{{ stats.active_keys }}/{{ stats.total_keys }}</strong>
             </div>
@@ -19,13 +28,13 @@
 
         <div class="card">
             <h2>API Keys</h2>
-            <form action="/keys/create" method="POST" style="margin-bottom: 1rem;">
-                <div style="margin-bottom: 0.5rem;">
+            <form action="/keys/create" method="POST" class="form-stack">
+                <div class="form-row">
                     <input type="text" name="name" placeholder="New Key Name" required>
-                    <button type="submit" class="btn btn-primary">Create Key</button>
+                    <button type="submit" class="btn btn-primary">[Create Key]</button>
                 </div>
-                <div>
-                    <label style="margin-right: 1rem;"><input type="checkbox" name="allow_all" value="true" checked>
+                <div class="form-row">
+                    <label><input type="checkbox" name="allow_all" value="true" checked>
                         Allow All</label>
                     <label><input type="checkbox" name="allowed_types_list" value="text"> Text</label>
                     <label><input type="checkbox" name="allowed_types_list" value="markdown"> Markdown</label>
@@ -37,85 +46,94 @@
                 </div>
             </form>
 
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Key</th>
-                    <th>Status</th>
-                    <th>Allowed Types</th>
-                    <th>Created At</th>
-                    <th style='width: 150px'></th>
-                </tr>
-                {% for key in keys %}
-                <tr class="api-key-item">
-                    <td>{{ key.id }}</td>
-                    <td>{{ key.name }}</td>
-                    <td><code>{{ key.key }}</code></td>
-                    <td>
-                        {{ 'Active' if key.is_active else 'Inactive' }}
-                    </td>
-                    <td><code>{{ key.allowed_types }}</code></td>
-                    <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td class="item-actions">
-                        <a href="/keys/{{ key.id }}/edit">
-                            <button type="button" class="btn btn-primary">Edit</button>
-                        </a>
-                        <form action="/keys/{{ key.id }}/toggle" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-secondary">Toggle</button>
-                        </form>
-                        <form action="/keys/{{ key.id }}/delete" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('Delete this API key permanently?');">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Key</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Allowed Types</th>
+                            <th scope="col">Created At</th>
+                            <th scope="col"><span class="info">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key in keys %}
+                        <tr class="api-key-item">
+                            <td>{{ key.id }}</td>
+                            <td>{{ key.name }}</td>
+                            <td><code>{{ key.key }}</code></td>
+                            <td>
+                                {{ 'Active' if key.is_active else 'Inactive' }}
+                            </td>
+                            <td><code>{{ key.allowed_types }}</code></td>
+                            <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="item-actions">
+                                <a href="/keys/{{ key.id }}/edit" class="btn btn-primary">[Edit]</a>
+                                <form action="/keys/{{ key.id }}/toggle" method="POST" class="inline">
+                                    <button type="submit" class="btn btn-secondary">[Toggle]</button>
+                                </form>
+                                <form action="/keys/{{ key.id }}/delete" method="POST" class="inline">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Delete this API key permanently?');">[Delete]</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card">
             <h2>Content Items</h2>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Created At</th>
-                    <th>Expires At</th>
-                    <th style="max-width: 25%">File Details</th>
-                    <th style='width: 150px'></th>
-                </tr>
-                {% for item in items %}
-                <tr class="content-item">
-                    <td><code>{{ item.id }}</code></td>
-                    <td>{{ item.type }}</td>
-                    <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ item.expires_at.strftime('%Y-%m-%d %H:%M') if item.expires_at else 'Never' }}</td>
-                    <td style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 25%;">
-                        {% if item.type in ('file', 'image', 'audio', 'video') %}
-                        {{ item.metadata_dict.get('filename', 'N/A') }}
-                        {% elif item.type == 'url' %}
-                        {{ item.content_text | default('') }}
-                        {% elif item.title %}
-                        Title: <i>{{ item.title | default('') }}</i>
-                        {% elif item.content_text %}
-                        <i>{{ item.content_text | truncate(50, True, '...') }}</i>
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td class="item-actions">
-                        <form action="/items/{{ item.id }}/delete" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('Delete this item?');">Delete</button>
-                        </form>
-                        <a href="{{ base_url }}/{{ item.id }}" target="_blank">
-                            <button type="button" class="btn btn-primary">View</button>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Created At</th>
+                            <th scope="col">Expires At</th>
+                            <th scope="col">File Details</th>
+                            <th scope="col"><span class="info">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="content-item">
+                            <td><code>{{ item.id }}</code></td>
+                            <td>{{ item.type }}</td>
+                            <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ item.expires_at.strftime('%Y-%m-%d %H:%M') if item.expires_at else 'Never' }}</td>
+                            <td class="cell-clip">
+                                {% if item.type in ('file', 'image', 'audio', 'video') %}
+                                {{ item.metadata_dict.get('filename', 'N/A') }}
+                                {% elif item.type == 'url' %}
+                                {{ item.content_text | default('') }}
+                                {% elif item.title %}
+                                Title: <i>{{ item.title | default('') }}</i>
+                                {% elif item.content_text %}
+                                <i>{{ item.content_text | truncate(50, True, '...') }}</i>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="item-actions">
+                                <form action="/items/{{ item.id }}/delete" method="POST" class="inline">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Delete this item?');">[Delete]</button>
+                                </form>
+                                <a href="{{ base_url }}/{{ item.id }}" target="_blank" rel="noopener"
+                                    class="btn btn-primary">[View]</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>

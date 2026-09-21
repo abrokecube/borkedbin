@@ -1,62 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <meta name="robots" content="noindex,noarchive,nofollow" />
     <title>BorkedBin - Edit API Key</title>
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta property="og:site_name" content="BorkedBin">
+    <meta property="og:title" content="BorkedBin - Edit API Key">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/styles.css">
-    <style>
-        .container {
-            max-width: 600px;
-            margin: auto;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-
-        .checkbox-group label {
-            display: inline-block;
-            margin-right: 1rem;
-            margin-bottom: 0.5rem;
-            font-weight: normal;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container narrow">
         <h1>Edit API Key</h1>
 
         <div class="card">
             <form id="editForm" method="POST">
                 <div class="form-group">
-                    <label>Key Name</label>
+                    <label for="keyName">Key Name</label>
                     <input type="text" id="keyName" name="name" required>
                 </div>
 
                 <div class="form-group checkbox-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Allowed Types</label>
-                    <label><input type="checkbox" id="allowAll" name="allow_all" value="true"> Allow All</label><br>
+                    <span id="allowedTypesLabel" class="group-label">Allowed Types</span>
+                    <div role="group" aria-labelledby="allowedTypesLabel">
+                        <label><input type="checkbox" id="allowAll" name="allow_all" value="true"> Allow All</label><br>
 
-                    <label><input type="checkbox" name="allowed_types_list" value="text"> Text</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="markdown"> Markdown</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="url"> URL</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="image"> Image</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="audio"> Audio</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="video"> Video</label>
-                    <label><input type="checkbox" name="allowed_types_list" value="file"> File</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="text"> Text</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="markdown"> Markdown</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="url"> URL</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="image"> Image</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="audio"> Audio</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="video"> Video</label>
+                        <label><input type="checkbox" name="allowed_types_list" value="file"> File</label>
+                    </div>
                 </div>
 
-                <div style="margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-primary" id="saveBtn" disabled>Save Changes</button>
-                    <a href="/" class="btn btn-secondary">Cancel</a>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="saveBtn" disabled>[Save Changes]</button>
+                    <a href="/" class="btn btn-secondary">[Cancel]</a>
                 </div>
             </form>
         </div>

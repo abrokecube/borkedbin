@@ -1,123 +1,197 @@
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap');
-
-:root {
-    --font-family: "Exo 2", sans-serif;
-}
-
-
-body {
-    font-family: var(--font-family);
-    font-size: 13px;
-    background: #181818;
-    color: #cecaca;
-    margin: 0;
-    padding: 2rem;
-}
-
-code {
-    font-family: "Sometype Mono", monospace;
-    font-size: 0.95em;
-}
+/* Admin layout layer. Shared theme (/theme.css) owns base tokens, body/font,
+   .button/.btn chrome, focus rings, separators, and scrollbars.
+   This file adds admin layout (container, header, cards, form rows, fields,
+   table overflow + compact spacing, action visibility, danger accent). */
 
 .container {
     max-width: 1200px;
-    margin: auto;
+    margin: 0 auto;
+    padding: 6px;
+}
+
+.container.narrow {
+    max-width: 600px;
+}
+
+.container h1 {
+    margin: 0 0 4px;
+    font-size: 1em;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 2px 0 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 6px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1em;
+}
+
+.header strong {
+    color: var(--text);
 }
 
 .card {
-    margin-bottom: 2rem;
+    margin: 0 0 6px;
+    padding: 0 0 6px;
+    border-bottom: 1px solid var(--line);
+}
+
+.card:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.card h2 {
+    margin: 0 0 4px;
+    font-size: 1em;
+}
+
+.card p {
+    margin: 0 0 4px;
+}
+
+/* Forms: stacked groups, inline wrapping rows. */
+.form-stack {
+    margin-bottom: 6px;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.inline {
+    display: inline;
+}
+
+.form-group {
+    margin-bottom: 6px;
+}
+
+.form-group > label:first-child,
+.group-label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.checkbox-group label {
+    display: inline-block;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    font-weight: 400;
+}
+
+.form-actions {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: baseline;
+}
+
+/* Fields: compact square low-chrome text inputs/selects on theme tokens. */
+.form-row input[type="text"],
+.form-group input[type="text"],
+select {
+    font: inherit;
+    color: inherit;
+    background: var(--field-bg);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    padding: 2px 6px;
+}
+
+/* Tables: compact rows, thin separators, horizontal scroll wrapper. */
+.table-wrap {
+    overflow-x: auto;
+    scrollbar-width: thin;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 0.5rem;
+    margin-top: 4px;
+    font-size: 0.9em;
 }
 
 th,
 td {
     text-align: left;
-    padding: 1px 5px;
-    border-bottom: 1px solid #ffffff2f;
+    padding: 2px 6px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: baseline;
+    white-space: nowrap;
 }
 
 th {
     font-weight: 600;
+    color: var(--muted);
+    font-size: 0.9em;
 }
 
-button, label {
+td code {
     font-family: inherit;
-    font-size: inherit;
-    user-select: none;
+    font-size: 1em;
 }
 
-.btn {
-    padding: 1px 5px 3px 5px;
-    margin: 0px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
+td.cell-clip {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 25vw;
 }
 
-.btn-danger {
-    background: #dc3545;
-    color: white;
-}
-
-.btn-primary {
-    background: #007bff;
-    color: white;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.badge {
-    padding: 1px 5px 3px 5px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-}
-
-.badge-active {
-    background: #28a745;
-    color: white;
-}
-
-.badge-inactive {
-    background: #6c757d;
-    color: white;
-}
-
+/* Row actions: reveal on hover only where hovering exists; always visible
+   for touch, keyboard focus, and reduced-motion. */
 .item-actions {
-    opacity: 0;
+    text-align: right;
+    white-space: nowrap;
 }
 
-tr:hover {
-    background: #ffffff15;
+@media (hover: hover) {
+    .item-actions {
+        opacity: 0;
+    }
 
+    tr:hover .item-actions,
+    tr:focus-within .item-actions {
+        opacity: 1;
+    }
+}
+
+@media (hover: none) {
     .item-actions {
         opacity: 1;
     }
 }
 
-h2 {
-    margin-top: 0;
-    margin-bottom: 0.25rem;
+@media (prefers-reduced-motion: reduce) {
+    .item-actions {
+        opacity: 1;
+    }
 }
 
-input[type="text"] {
-    padding: 0.2rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+/* Destructive emphasis: error hue in both schemes; bracket chrome and
+   focus rings come from the shared theme. */
+.btn-danger {
+    color: var(--error);
+}
+
+.btn-danger:hover {
+    background: var(--error-bg);
 }
