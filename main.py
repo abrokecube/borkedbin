@@ -16,12 +16,12 @@ setup_logging(level=logging.INFO)
 logger = logging.getLogger("main")
 
 async def run_public():
-    config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port)
+    config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port, log_config=None)
     server = uvicorn.Server(config)
     await server.serve()
 
 async def run_admin():
-    config = uvicorn.Config("main_admin:app", host=settings.admin_host, port=settings.admin_port)
+    config = uvicorn.Config("main_admin:app", host=settings.admin_host, port=settings.admin_port, log_config=None)
     server = uvicorn.Server(config)
     await server.serve()
 
