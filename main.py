@@ -2,6 +2,7 @@ import asyncio
 import logging
 import uvicorn
 import os
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from sqlmodel import Session, select
 from database import engine, ContentItem
@@ -15,12 +16,29 @@ with open('pid', 'w') as f:
 setup_logging(level=logging.INFO)
 logger = logging.getLogger("main")
 
+# Both uvicorn servers log under the same "uvicorn.*" logger names, so tag each record
+# with the server that emitted it (e.g. "uvicorn.public.access").
+# The context var is inherited by every task/callback the server spawns.
+current_server: ContextVar[str | None] = ContextVar("current_server", default=None)
+_base_record_factory = logging.getLogRecordFactory()
+
+def _record_factory(*args, **kwargs):
+    record = _base_record_factory(*args, **kwargs)
+    server = current_server.get()
+    if server and record.name.startswith("uvicorn."):
+        record.name = f"uvicorn.{server}.{record.name[len('uvicorn.'):]}"
+    return record
+
+logging.setLogRecordFactory(_record_factory)
+
 async def run_public():
+    current_server.set("public")
     config = uvicorn.Config("main_public:app", host=settings.public_host, port=settings.public_port, log_config=None)
     server = uvicorn.Server(config)
     await server.serve()
 
 async def run_admin():
+    current_server.set("admin")
     config = uvicorn.Config("main_admin:app", host=settings.admin_host, port=settings.admin_port, log_config=None)
     server = uvicorn.Server(config)
     await server.serve()
