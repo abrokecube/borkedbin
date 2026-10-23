@@ -264,9 +264,32 @@ def stream_supports_colour(stream: Any) -> bool:
     if sys.platform != "win32":
         return is_a_tty
 
+    if not is_a_tty:
+        return False
+
     # ANSICON checks for things like ConEmu
     # WT_SESSION checks if this is Windows Terminal
-    return is_a_tty and ("ANSICON" in os.environ or "WT_SESSION" in os.environ)
+    if "ANSICON" in os.environ or "WT_SESSION" in os.environ:
+        return True
+
+    # Plain PowerShell / conhost: ANSI escapes work on Windows 10+ once virtual terminal processing is enabled
+    return _enable_windows_vt(stream)
+
+
+def _enable_windows_vt(stream: Any) -> bool:
+    try:
+        import ctypes
+        import msvcrt
+
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        handle = msvcrt.get_osfhandle(stream.fileno())  # type: ignore[attr-defined]
+        mode = ctypes.c_ulong()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+        return bool(kernel32.SetConsoleMode(handle, mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+    except Exception:
+        return False
 
 
 def stream_supports_rgb(stream: Any) -> bool:
@@ -296,7 +319,7 @@ class ColourFormatter(logging.Formatter):
                 logging.INFO: "\x1b[38;2;100;55;215;1m",
                 logging.WARNING: "\x1b[38;2;204;189;51;1m",
                 logging.ERROR: "\x1b[38;2;161;38;46m",
-                logging.CRITICAL: "\x1b[48;2;161;38;46",
+                logging.CRITICAL: "\x1b[48;2;161;38;46m",
             }
 
         elif self._supports_colour:
@@ -305,7 +328,7 @@ class ColourFormatter(logging.Formatter):
                 logging.INFO: "\x1b[34;1m",
                 logging.WARNING: "\x1b[33;1m",
                 logging.ERROR: "\x1b[31m",
-                logging.CRITICAL: "\x1b[41",
+                logging.CRITICAL: "\x1b[41m",
             }
 
         self._FORMATS: dict[int, logging.Formatter] = {
